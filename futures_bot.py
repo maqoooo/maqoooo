@@ -34,10 +34,14 @@ CONTRACT_SIZE_BTC = 0.01
 
 
 class OKXFuturesBot:
-    def __init__(self, config: FuturesConfig):
+    def __init__(self, config: FuturesConfig, notifier=None):
         self.config = config
+        self.notifier = notifier
         self.exchange = self._init_exchange()
         self.position: dict | None = None
+        self.running: bool = False
+        self.current_price: float = 0.0
+        self.last_update: str = ""
 
         Path("logs").mkdir(exist_ok=True)
         logger.add(
@@ -49,6 +53,21 @@ class OKXFuturesBot:
         )
 
         self._configure_futures()
+
+    def stop(self):
+        self.running = False
+
+    def get_status(self) -> dict:
+        return {
+            "position": self.position,
+            "current_price": self.current_price,
+            "last_update": self.last_update,
+            "running": self.running,
+        }
+
+    def _notify(self, text: str):
+        if self.notifier:
+            self.notifier.send(text)
 
     # ─── Setup ───────────────────────────────────────────────────────────────
 
@@ -126,6 +145,7 @@ class OKXFuturesBot:
             if not active:
                 if self.position:
                     logger.warning("Position disappeared (liquidated or closed externally).")
+                    self._notify("⚠️ <b>Pozycja zlikwidowana lub zamknięta zewnętrznie!</b>\nSprawdź konto OKX.")
                 self.position = None
                 return
 
@@ -199,6 +219,12 @@ class OKXFuturesBot:
             "sl": sl, "tp": tp,
             "opened_at": datetime.now(timezone.utc).isoformat(),
         }
+        self._notify(
+            f"🟢 <b>LONG otwarto</b>\n"
+            f"Cena: <b>${price:.2f}</b>\n"
+            f"Kontrakty: {contracts}  (~${notional:.0f})\n"
+            f"SL: ${sl:.2f}  |  TP: ${tp:.2f}"
+        )
 
     def _open_short(self, price: float, contracts: int):
         sl = round(price * (1 + self.config.stop_loss_pct), 2)
@@ -221,6 +247,12 @@ class OKXFuturesBot:
             "sl": sl, "tp": tp,
             "opened_at": datetime.now(timezone.utc).isoformat(),
         }
+        self._notify(
+            f"🔴 <b>SHORT otwarto</b>\n"
+            f"Cena: <b>${price:.2f}</b>\n"
+            f"Kontrakty: {contracts}  (~${notional:.0f})\n"
+            f"SL: ${sl:.2f}  |  TP: ${tp:.2f}"
+        )
 
     def _close_position(self, price: float, reason: str):
         if self.position is None:
@@ -252,6 +284,18 @@ class OKXFuturesBot:
             "reason": reason,
             "closed_at": datetime.now(timezone.utc).isoformat(),
         })
+        emoji = "✅" if pnl_pct > 0 else "❌"
+        reason_pl = {
+            "stop_loss": "Stop Loss",
+            "take_profit": "Take Profit",
+            "reverse_signal": "Odwrócenie sygnału",
+        }.get(reason, reason)
+        self._notify(
+            f"{emoji} <b>Pozycja zamknięta</b>\n"
+            f"Powód: {reason_pl}\n"
+            f"P&L: <b>{pnl_pct:+.2f}%</b> ({self.config.leverage}x)\n"
+            f"Exit: ${price:.2f}"
+        )
         self.position = None
 
     def _log_trade(self, trade: dict):
@@ -266,6 +310,9 @@ class OKXFuturesBot:
         df = self._fetch_candles()
         price = float(df["close"].iloc[-1])
         resistance, support = self._breakout_levels(df)
+
+        self.current_price = price
+        self.last_update = datetime.now(timezone.utc).strftime("%H:%M:%S UTC")
 
         pos_label = (
             f"{self.position['side'].upper()} {self.position['contracts']}c "
@@ -313,16 +360,19 @@ class OKXFuturesBot:
             f"| SL={self.config.stop_loss_pct:.1%} TP={self.config.take_profit_pct:.1%}"
         )
 
-        while True:
+        self.running = True
+        while self.running:
             try:
                 self._step()
 
             except ccxt.AuthenticationError as e:
                 logger.error(f"Authentication failed: {e}")
+                self._notify("🚨 <b>Błąd autoryzacji OKX!</b> Sprawdź klucze API.")
                 sys.exit(1)
 
             except ccxt.InsufficientFunds as e:
                 logger.error(f"Insufficient funds: {e}")
+                self._notify("⚠️ <b>Niewystarczające środki</b> na koncie OKX.")
 
             except ccxt.NetworkError as e:
                 logger.warning(f"Network error: {e} — retrying in 30s")
@@ -334,6 +384,7 @@ class OKXFuturesBot:
 
             except KeyboardInterrupt:
                 logger.info("Shutting down gracefully")
+                self.running = False
                 break
 
             except Exception as e:
