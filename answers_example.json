@@ -1,0 +1,14 @@
+[
+  {
+    "imie":   "Jan Kowalski",
+    "email":  "jan@example.com",
+    "wiek":   "25",
+    "opinia": "Bardzo dobry produkt!"
+  },
+  {
+    "imie":   "Anna Nowak",
+    "email":  "anna@example.com",
+    "wiek":   "32",
+    "opinia": "Polecam wszystkim."
+  }
+]
