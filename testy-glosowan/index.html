@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testy głosowań — MediaPark — makieta</title>
+<meta name="description" content="Makieta systemu do testowania głosowań w budżecie obywatelskim: lista klientów ze statusem ankiety i testów, wysyłka jednej ankiety, potwierdzenia, karta klienta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap&subset=latin-ext">
+<style>
+:root{
+  --bg:#f3f6f7;--surface:#fff;--tint:#e9f5f5;--line:#dce5e8;--line-strong:#75939b;
+  --ink:#172f38;--ink-strong:#0f2229;--muted:#60747c;
+  --primary:#087f8c;--primary-hover:#056571;--accent-text:#056571;--link:#0a6f7b;
+  --ok:#23754e;--ok-bg:#e9f5ed;--warn:#956415;--warn-bg:#fff6df;--danger:#b44436;--danger-bg:#fff0ed;--info:#056571;--info-bg:#e9f5f5;
+  --radius:10px;--radius-sm:6px;--pill:999px;
+  --shadow:0 1px 2px rgba(23,47,56,.05),0 6px 20px rgba(8,127,140,.08);
+  --focus:0 0 0 3px var(--bg),0 0 0 5px var(--primary);
+  --font:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --max:1500px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--font)}
+h1,h2,h3{margin:0;color:var(--ink-strong);line-height:1.2;text-wrap:balance}
+h1{font-size:clamp(1.375rem,1.1rem + .9vw,1.75rem);font-weight:600}
+h2{font-size:1.125rem;font-weight:600}
+h3{font-size:.9375rem;font-weight:600}
+p{margin:0}
+a{color:var(--link);text-underline-offset:.15em}
+a:hover{color:var(--accent-text)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:none;box-shadow:var(--focus);border-radius:var(--radius-sm)}
+.skip-link{position:absolute;left:16px;top:-100px;padding:8px 16px;background:var(--surface);color:var(--ink-strong);border-radius:var(--radius-sm);box-shadow:var(--shadow);z-index:1000}
+.skip-link:focus{top:16px}
+.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.small{font-size:.8125rem}.muted{color:var(--muted)}.num{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- pasek górny ---------- */
+.topbar{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.topbar .inner{max-width:var(--max);margin-inline:auto;padding:0 clamp(16px,3vw,32px);min-height:64px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink-strong)}
+.brand .mark{width:36px;height:36px;border-radius:9px;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;letter-spacing:.02em}
+.brand strong{font-weight:600;display:block;line-height:1.15}
+.brand span{display:block;font-size:.75rem;color:var(--muted)}
+.topbar .spacer{flex:1}
+.demo{font-size:.75rem;padding:4px 10px;background:var(--warn-bg);color:var(--warn);border-radius:var(--pill);font-weight:500}
+.user{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--tint);color:var(--accent-text);display:grid;place-items:center;font-weight:600;font-size:.75rem}
+
+/* ---------- układ ---------- */
+main{max-width:var(--max);margin-inline:auto;padding:24px clamp(16px,3vw,32px) 64px}
+.pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
+.pagehead p{color:var(--muted);margin-top:4px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* ---------- przyciski ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:var(--radius-sm);border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink-strong);font-weight:500;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover{background:var(--tint);border-color:var(--primary)}
+.btn:active{transform:scale(.98)}
+.btn svg{width:16px;height:16px;flex-shrink:0}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--accent-text)}
+.btn.ghost:hover{background:var(--tint)}
+.btn.danger{color:var(--danger);border-color:#e5bcb6}
+.btn.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:.8125rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.iconbtn{width:34px;height:34px;display:inline-grid;place-items:center;border-radius:var(--radius-sm);border:1.5px solid transparent;background:transparent;color:var(--accent-text);cursor:pointer}
+.iconbtn:hover{background:var(--tint)}
+.iconbtn svg{width:18px;height:18px}
+
+/* ---------- kafle statusów (zastępują zakładki raportów) ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.stat{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);padding:14px 18px;cursor:pointer;display:grid;gap:2px;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+.stat:hover{border-color:var(--primary)}
+.stat[aria-pressed="true"]{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);background:var(--tint)}
+.stat .lbl{font-size:.8125rem;color:var(--muted);display:flex;align-items:center;gap:8px}
+.stat .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.stat .dot.warn{background:#cb982c}.stat .dot.danger{background:var(--danger)}.stat .dot.ok{background:var(--ok)}.stat .dot.muted{background:var(--line-strong)}
+.stat .val{font-size:1.75rem;font-weight:600;color:var(--ink-strong);line-height:1.2}
+.stat .sub{font-size:.75rem;color:var(--muted)}
+
+/* ---------- pasek narzędzi listy ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.segments{display:inline-flex;flex-wrap:wrap;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:3px;background:var(--bg);gap:2px}
+.segments button{border:0;border-radius:4px;padding:6px 12px;background:transparent;color:var(--ink);font-weight:500;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.segments button .n{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.segments button[aria-pressed="true"]{background:var(--surface);color:var(--accent-text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.segments button[aria-pressed="true"] .n{color:var(--accent-text)}
+.search{position:relative;flex:1;min-width:200px;max-width:340px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+.search input{width:100%;padding-left:36px}
+input,select,textarea{color:var(--ink);background:var(--surface);border:1.5px solid var(--line-strong);border-radius:var(--radius-sm);padding:0 12px;min-height:40px;max-width:100%}
+textarea{padding:10px 12px;min-height:110px;width:100%;resize:vertical;line-height:1.6}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+input:focus-visible,select:focus-visible,textarea:focus-visible{border-color:var(--primary);box-shadow:var(--focus)}
+input[type=checkbox]{accent-color:var(--primary);width:18px;height:18px;min-height:auto;flex-shrink:0}
+.toolbar .count{margin-left:auto;color:var(--muted);font-size:.8125rem}
+.clearfilter{display:none}
+.clearfilter.on{display:inline-flex}
+
+/* ---------- tabela ---------- */
+.tablewrap{overflow-x:auto;max-width:100%;position:relative}
+main{min-width:0}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap;background:var(--bg)}
+th button{all:unset;cursor:pointer;display:inline-flex;gap:6px;align-items:center;font:inherit;color:inherit}
+th button:hover{color:var(--accent-text)}
+th button:focus-visible{box-shadow:var(--focus)}
+th button svg{width:12px;height:12px;opacity:.55}
+th[aria-sort] button svg{opacity:1;color:var(--accent-text)}
+tbody tr:hover{background:#f8fbfb}
+tbody tr:last-child td{border-bottom:0}
+td.right,th.right{text-align:right}
+.client{display:grid;gap:2px}
+.client a{font-weight:600;text-decoration:none;color:var(--ink-strong)}
+.client a:hover{color:var(--accent-text);text-decoration:underline}
+.client .nr{color:var(--muted);font-weight:400;margin-right:6px;font-variant-numeric:tabular-nums}
+.dates{display:grid;gap:2px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dates span{color:var(--muted);font-size:.75rem;margin-right:6px;display:inline-block;width:18px}
+.contact{display:grid;gap:2px;max-width:170px}
+.contact .who{font-weight:500}
+.contact .links{display:flex;gap:4px;margin-top:2px}
+.rowactions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.empty{padding:48px 24px;text-align:center;display:grid;gap:8px;justify-items:center}
+.empty svg{width:40px;height:40px;color:var(--line-strong)}
+
+/* ---------- badge ---------- */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:var(--pill);font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.badge svg{width:12px;height:12px}
+.badge.ok{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.badge.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.badge.danger{background:var(--danger-bg);color:var(--danger);border-color:transparent}
+.badge.info{background:var(--info-bg);color:var(--info);border-color:transparent}
+.cell-status{display:grid;gap:4px;justify-items:start}
+.cell-status .when{font-size:.75rem;color:var(--muted);max-width:170px}
+.cell-status a.small{font-size:.75rem}
+
+/* ---------- karta klienta ---------- */
+.back{display:inline-flex;align-items:center;gap:6px;font-size:.8125rem;text-decoration:none;color:var(--muted);margin-bottom:8px}
+.back:hover{color:var(--accent-text)}
+.back svg{width:14px;height:14px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:20px;overflow:hidden}
+.meta div{padding:14px 18px;border-right:1px solid var(--line);display:grid;gap:2px}
+.meta div:last-child{border-right:0}
+.meta span{font-size:.75rem;color:var(--muted)}
+.meta strong{font-weight:600;color:var(--ink-strong)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.split>*{min-width:0}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:10px 14px;color:var(--muted);font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;display:inline-flex;gap:8px;align-items:center}
+.tabs button:hover{color:var(--ink-strong)}
+.tabs button[aria-selected="true"]{color:var(--accent-text);border-bottom-color:var(--primary)}
+.tabs .pillnum{background:var(--danger);color:#fff;border-radius:var(--pill);font-size:.6875rem;padding:1px 7px;font-weight:600}
+.panelhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.panelbody{padding:18px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:.875rem}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.notice{display:flex;gap:12px;padding:12px 16px;border-radius:var(--radius-sm);border:1px solid transparent;margin-bottom:16px;align-items:flex-start}
+.notice svg{width:18px;height:18px;flex-shrink:0;margin-top:2px}
+.notice.warn{background:var(--warn-bg);color:var(--warn)}
+.notice.ok{background:var(--ok-bg);color:var(--ok)}
+.notice.info{background:var(--info-bg);color:var(--info)}
+.notice.danger{background:var(--danger-bg);color:var(--danger)}
+.check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--line)}
+.check:last-child{border-bottom:0}
+.check label{display:grid;gap:2px;cursor:pointer;flex:1}
+.check .hint{font-size:.75rem;color:var(--muted)}
+.check .by{font-size:.75rem;color:var(--ok)}
+.mono{font-family:Consolas,"SF Mono",monospace;font-size:.75rem;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px;overflow:auto;max-height:320px;margin:0}
+.timeline{list-style:none;margin:0;padding:0}
+.timeline li{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.timeline li:last-child{border-bottom:0}
+.timeline time{font-size:.75rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.timeline .by{font-size:.75rem;color:var(--muted)}
+tr.diff td{background:var(--warn-bg)}
+.field{display:grid;gap:6px;margin-bottom:16px}
+.field label{font-weight:500;color:var(--ink-strong)}
+.field .hint{font-size:.8125rem;color:var(--muted)}
+.dropzone{border:2px dashed var(--line-strong);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted)}
+
+/* ---------- dialog ---------- */
+dialog{border:0;border-radius:var(--radius);padding:0;max-width:600px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(0,0,0,.25);color:var(--ink)}
+dialog::backdrop{background:rgba(15,34,41,.5)}
+dialog .dhead{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+dialog .dbody{padding:22px}
+dialog .dfoot{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.preview{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px;font-size:.875rem}
+.preview ol{margin:8px 0 0;padding-left:20px}
+.preview li{margin:4px 0}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink-strong);color:#fff;padding:12px 18px;border-radius:var(--radius-sm);box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:calc(100% - 32px);font-size:.875rem}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:1100px){.split{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){
+  .segments{width:100%}.segments button{flex:1;justify-content:center}
+  .search{max-width:none}
+  .toolbar .count{margin-left:0;width:100%}
+  .rowactions{justify-content:flex-start}
+  .topbar .inner{gap:12px}.brand span{display:none}.user .name{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Przejdź do treści</a>
+
+<header class="topbar">
+  <div class="inner">
+    <a class="brand" href="#lista" aria-label="Testy głosowań, strona główna">
+      <span class="mark" aria-hidden="true">MP</span>
+      <span><strong>Testy głosowań</strong><span>Budżet obywatelski · MediaPark</span></span>
+    </a>
+    <span class="spacer"></span>
+    <span class="demo">Makieta · dane przykładowe</span>
+    <div class="user"><span class="avatar" aria-hidden="true">AK</span><span class="name small">Anna — opiekun</span></div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1"></main>
+
+<dialog id="dlg-send" aria-labelledby="dlg-send-title">
+  <form method="dialog">
+    <div class="dhead"><h2 id="dlg-send-title">Wyślij ankietę</h2><button type="button" class="iconbtn" data-close aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+    <div class="dbody" id="dlg-send-body"></div>
+    <div class="dfoot"><button type="button" class="btn" data-close>Nie wysyłaj</button><button type="button" class="btn primary" id="dlg-send-ok"></button></div>
+  </form>
+</dialog>
+
+<div class="toast" role="status" aria-live="polite" id="toast"></div>
+
+<script>
+/* ============================================================
+   DANE (na sztywno — makieta)
+   ============================================================ */
+const VERSION='testy-glosowan-v1';
+const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plural=(n,a,b,c)=>{n=Math.abs(n);if(n===1)return a;const m10=n%10,m100=n%100;return (m10>=2&&m10<=4&&!(m100>=12&&m100<=14))?b:c};
+
+// Jedna ankieta — stała, wysyłana do każdego klienta w identycznej treści.
+const SURVEY={
+  title:'Ustalenia głosowania — potwierdzenie zasad',
+  questions:[
+    ['date_start','Rozpoczęcie głosowania (data i godzina)'],
+    ['date_end','Zakończenie głosowania (data i godzina)'],
+    ['max_votes_total','Maksymalna liczba głosów na mieszkańca'],
+    ['eligibility_check','Sposób weryfikacji uprawnień (baza mieszkańców / adres / brak)'],
+    ['sms_verification','Weryfikacja SMS (tak / nie)'],
+    ['sms_per_phone_limit','Limit głosów na jeden numer telefonu'],
+    ['age_rule','Zasady wieku i zgoda rodzica'],
+    ['info_clause','Klauzula informacyjna: z poprzedniej edycji czy nowa'],
+  ],
+  closing:'Oświadczam, że powyższe zasady są zgodne z obowiązującą uchwałą/regulaminem BO i na ich podstawie ma zostać skonfigurowane głosowanie.'
+};
+
+// Statusy ankiety (jedna oś) i testów (druga oś) — rozdzielone, bo odpowiadają za nie różne osoby.
+const SURVEY_STATUS={
+  none:      {label:'Nie wysłana',        cls:'',       ico:'mail'},
+  sent:      {label:'Wysłana',            cls:'info',   ico:'send'},
+  opened:    {label:'Otwarta, bez odpowiedzi',cls:'info',  ico:'eye'},
+  confirmed: {label:'Potwierdzona',       cls:'ok',     ico:'check'},
+  changes:   {label:'Wymagane zmiany',    cls:'danger', ico:'alert'},
+  expired:   {label:'Link wygasł',        cls:'danger', ico:'alert'},
+};
+const TEST_STATUS={
+  none:     {label:'Nie rozpoczęty',            cls:'',      ico:'circle'},
+  blocked:  {label:'Po potwierdzeniu',         cls:'',      ico:'clock'},
+  internal_issues:{label:'Rozbieżności w teście',cls:'danger',ico:'alert'},
+  internal_ok:{label:'Test wewnętrzny OK',      cls:'info',  ico:'check'},
+  client_ok:{label:'Test z klientem OK',        cls:'info',  ico:'check'},
+  ready:    {label:'Gotowe do startu',          cls:'ok',    ico:'flag'},
+  running:  {label:'Głosowanie trwa',           cls:'ok',    ico:'play'},
+  finished: {label:'Zakończone',                cls:'',      ico:'check'},
+};
+
+const CHECKS=[
+  ['db','Baza uprawnionych wgrana i przetestowana','Tylko przy weryfikacji w bazie mieszkańców.'],
+  ['projects','Projekty do głosowania opublikowane','Widoczność i kompletność listy.'],
+  ['numbers','Numery projektów zgodne z zasadami','Kolejność i ciągłość numeracji.'],
+  ['year','Rok edycji spójny we wszystkich miejscach','Karta, zgoda rodzica, klauzula, slogan.'],
+  ['content','Klauzula i oświadczenia sprawdzone','Pełna treść zgodna z potwierdzeniem klienta.'],
+  ['variants','Warianty testowe przekazane klientowi','Ścieżki poprawnego i błędnego głosowania.'],
+  ['internal','Test wewnętrzny wykonany','Zapisuje osobę i datę.'],
+  ['client','Test z klientem wykonany','Zapisuje osobę i datę.'],
+  ['prestart','Kontrola przed startem wykonana','Ostatnie sprawdzenie przed uruchomieniem.'],
+];
+
+function seed(){
+  // [klient, od, do, projekty, uprawnieni, weryfikacja, ankieta, test, kontakt, stanowisko, e-mail, telefon, opiekun]
+  const rows=[
+    ['Śrem','2026-09-18T00:00','2026-09-27T23:59',5,0,'none','sent','blocked','Marta Wiśniewska','Koordynatorka BO','bo@srem.pl','61 283 00 01','Anna'],
+    ['Blachownia','2026-09-18T00:00','2026-09-24T23:59',24,11771,'residents_db','confirmed','internal_ok','Tomasz Nowak','Inspektor ds. partycypacji','t.nowak@blachownia.pl','34 327 04 09','Piotr'],
+    ['Lubawa','2026-09-19T00:00','2026-10-14T23:59',0,0,'none','none','none','Ewa Kowalczyk','Sekretarz Miasta','sekretarz@lubawa.pl','89 645 53 00','Anna'],
+    ['Kostrzyn','2026-09-21T00:00','2026-10-12T23:59',0,0,'address_list','none','none','Jakub Zieliński','Referat Promocji','promocja@kostrzyn.pl','61 817 85 65','Piotr'],
+    ['Świdnik','2026-09-21T00:00','2026-10-07T23:59',33,0,'none','confirmed','internal_issues','Agnieszka Lis','Koordynatorka BO','bo@swidnik.pl','81 751 76 02','Anna'],
+    ['Ostrołęka','2026-09-22T00:00','2026-10-15T23:59',8,0,'none','opened','blocked','Robert Mazur','Wydział Rozwoju','rozwoj@um.ostroleka.pl','29 764 68 11','Piotr'],
+    ['Grodzisk Mazowiecki','2026-09-23T00:00','2026-09-30T23:59',19,0,'none','sent','blocked','Katarzyna Dąbrowska','Biuro Konsultacji','konsultacje@grodzisk.pl','22 755 55 34','Anna'],
+    ['Miasto Lubartów','2026-09-25T08:00','2026-09-27T15:59',3,0,'none','changes','blocked','Michał Krawczyk','Sekretariat Burmistrza','sekretariat@lubartow.pl','81 855 22 73','Piotr'],
+    ['Nowa Sól','2026-09-25T00:00','2026-10-09T23:59',4,0,'none','confirmed','client_ok','Joanna Piotrowska','Koordynatorka BO','bo@nowasol.pl','68 459 03 00','Anna'],
+    ['Tarnobrzeg','2026-09-27T00:00','2026-10-11T23:59',0,0,'none','none','none','Paweł Grabowski','Wydział Organizacyjny','org@um.tarnobrzeg.pl','15 822 65 70','Piotr'],
+    ['Gorzów','2026-09-28T00:01','2026-10-11T23:59',37,0,'none','confirmed','ready','Anna Pawlak','Biuro Konsultacji Społecznych','bks@um.gorzow.pl','95 735 55 00','Anna'],
+    ['Urząd Miasta Koszalin','2026-09-28T00:00','2026-10-19T23:59',0,0,'residents_db','sent','blocked','Krzysztof Michalski','Pełnomocnik ds. BO','bo@um.koszalin.pl','94 348 86 00','Piotr'],
+    ['Krosno','2026-10-05T00:00','2026-10-29T09:59',72,0,'none','confirmed','internal_ok','Beata Sikora','Koordynatorka BO','bo@um.krosno.pl','13 474 36 00','Anna'],
+    ['Częstochowa','2026-09-21T00:00','2026-10-07T23:59',270,191849,'residents_db','confirmed','ready','Marek Wróbel','Wydział Polityki Społecznej','bo@czestochowa.um.gov.pl','34 370 71 00','Piotr'],
+    ['Białystok','2026-09-24T00:00','2026-10-07T23:59',72,0,'none','expired','blocked','Dorota Kamińska','Centrum Aktywności Społecznej','cas@um.bialystok.pl','85 869 60 00','Anna'],
+    ['Rybnik','2026-09-01T00:00','2026-09-20T23:59',44,0,'none','confirmed','running','Łukasz Baran','Wydział Rozwoju','rozwoj@um.rybnik.pl','32 439 20 00','Piotr'],
+    ['Gorlice','2026-08-10T00:00','2026-08-31T23:59',12,0,'none','confirmed','finished','Iwona Sowa','Koordynatorka BO','bo@gorlice.pl','18 355 12 52','Anna'],
+  ];
+  const stamp=(d,h='10:12')=>`${d} ${h}`;
+  return rows.map((r,i)=>{
+    const [client,start,end,projects,eligible,verification,survey,test,contact,position,email,phone,owner]=r;
+    const evidence=survey==='confirmed'?{name:contact,position,email,at:stamp('09.09.2026','14:31'),hash:'SHA-256 · d41d8c…demo'}:null;
+    const events=[{text:'Utworzono głosowanie w systemie testów',by:owner,at:stamp('01.09.2026','09:10')}];
+    if(survey!=='none')events.unshift({text:'Wysłano ankietę do '+contact,by:owner,at:stamp('05.09.2026','11:02')});
+    if(survey==='opened')events.unshift({text:'Klient otworzył ankietę',by:'system',at:stamp('06.09.2026','08:44')});
+    if(survey==='confirmed')events.unshift({text:'Klient potwierdził zasady (v1)',by:contact,at:evidence.at});
+    if(survey==='changes')events.unshift({text:'Klient zgłosił zmiany: „Głosowanie do 27.09 15:59, nie 23:59”',by:contact,at:stamp('08.09.2026','13:20')});
+    if(survey==='expired')events.unshift({text:'Link do ankiety wygasł po 14 dniach',by:'system',at:stamp('19.09.2026','00:00')});
+    if(['internal_ok','internal_issues','client_ok','ready','running','finished'].includes(test))events.unshift({text:test==='internal_issues'?'Test wewnętrzny: 2 rozbieżności':'Test wewnętrzny: bez rozbieżności',by:owner,at:stamp('11.09.2026','10:30')});
+    if(['client_ok','ready','running','finished'].includes(test))events.unshift({text:'Test z klientem wykonany',by:owner,at:stamp('13.09.2026','12:05')});
+    const checks={};
+    if(['internal_ok','internal_issues','client_ok','ready','running','finished'].includes(test)){checks.projects={by:owner,at:stamp('11.09.2026','10:00')};checks.internal={by:owner,at:stamp('11.09.2026','10:30')};}
+    if(['client_ok','ready','running','finished'].includes(test)){checks.client={by:owner,at:stamp('13.09.2026','12:05')};checks.content={by:owner,at:stamp('12.09.2026','09:15')};checks.variants={by:owner,at:stamp('12.09.2026','09:20')};}
+    if(['ready','running','finished'].includes(test)){checks.numbers={by:owner,at:stamp('14.09.2026','08:00')};checks.year={by:owner,at:stamp('14.09.2026','08:05')};checks.prestart={by:owner,at:stamp('14.09.2026','16:00')};}
+    // porównanie: klient vs uchwała vs platforma (tylko w Teście)
+    const rules={date_start:start,date_end:end,max_votes_total:3,eligibility_check:verification,sms_verification:true,sms_per_phone_limit:3,age_rule:'min_age_parent_consent',info_clause:'new'};
+    const platform=JSON.parse(JSON.stringify(rules));
+    if(test==='internal_issues'){platform.max_votes_total=0;platform.sms_per_phone_limit=5;}
+    return {id:2101+i,client,start,end,projects,eligible,verification,survey,test,contact,position,email,phone,owner:owner+' — opiekun',edition:'2026',contract:'UM/'+client.slice(0,3).toUpperCase()+'/2026',platformUrl:'https://budzet-obywatelski.'+client.toLowerCase().replace(/[^a-ząćęłńóśźż]/g,'')+'.pl',expires:'2026-10-03',rules,platform,resolution:i%3===0?{file:'Uchwała nr XXI/'+(120+i)+'/2026.pdf',fields:{max_votes_total:{value:3,quote:'Każdy mieszkaniec może oddać maksymalnie trzy głosy.'},date_start:{value:start,quote:'Głosowanie rozpoczyna się '+fmtDate(start)+'.'}}}:null,evidence,checks,events,notes:i===4?[{text:'Klient prosi o test w poniedziałek po 12:00. Rozbieżność w limicie SMS do wyjaśnienia z IT.',by:'Anna — opiekun',at:stamp('11.09.2026','11:00')}]:[]};
+  });
+}
+function fmtDate(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleDateString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'})}
+function fmtTime(iso){if(!iso)return '';const d=new Date(iso);return d.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'})}
+function fmtLong(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleDateString('pl-PL',{day:'numeric',month:'long',year:'numeric'})+', '+fmtTime(iso)}
+const now=()=>new Date().toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+let S;try{S=JSON.parse(localStorage.getItem(VERSION))||seed()}catch{S=seed()}
+function save(){try{localStorage.setItem(VERSION,JSON.stringify(S))}catch{toast('Pamięć przeglądarki niedostępna — zmiany znikną po zamknięciu strony.')}}
+const byId=id=>S.find(x=>x.id===Number(id));
+
+/* ============================================================
+   IKONY
+   ============================================================ */
+const ICONS={
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  send:'<path d="m22 2-7 20-4-9L2 9zM11 13 22 2"/>',
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  check:'<path d="m4 12 5 5L20 6"/>',
+  alert:'<path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  circle:'<circle cx="12" cy="12" r="8"/>',
+  flag:'<path d="M4 22V4h12l-1 4h6l-1 4H14l1 4H4"/>',
+  play:'<path d="m8 4 12 8-12 8z"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7A2 2 0 0 1 22 16.9z"/>',
+  arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+  back:'<path d="M19 12H5m6 6-6-6 6-6"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  sort:'<path d="m8 9 4-4 4 4M8 15l4 4 4-4"/>',
+  sortUp:'<path d="m8 15 4-4 4 4"/>',
+  sortDown:'<path d="m8 9 4 4 4-4"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  file:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
+  inbox:'<path d="M4 4h16v16H4z"/><path d="M4 14h4l2 3h4l2-3h4"/>',
+  refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>',
+};
+const icon=(n,cls='')=>`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]||ICONS.circle}</svg>`;
+const badge=(def,extra='')=>`<span class="badge ${def.cls}">${icon(def.ico)}${E(def.label)}${extra}</span>`;
+
+/* ============================================================
+   STAN WIDOKU
+   ============================================================ */
+let view='lista',currentId=null,tab='Klient';
+let seg='upcoming',range='1m',q='',quick='',sort={key:'start',dir:1};
+
+/* ============================================================
+   LOGIKA LISTY
+   ============================================================ */
+const TODAY=new Date('2026-09-17T12:00:00');
+function phase(a){const s=new Date(a.start),e=new Date(a.end);if(TODAY<s)return 'upcoming';if(TODAY>e)return 'finished';return 'running'}
+function withinRange(a){if(seg!=='upcoming'||range==='all')return true;const days={'2w':14,'1m':31,'3m':92}[range];const s=new Date(a.start);return (s-TODAY)/86400000<=days}
+function quickMatch(a){
+  switch(quick){
+    case 'nosurvey':return a.survey==='none'||a.survey==='expired';
+    case 'waiting':return a.survey==='sent'||a.survey==='opened';
+    case 'issues':return a.test==='internal_issues'||a.survey==='changes';
+    case 'ready':return a.test==='ready';
+    default:return true;
+  }
+}
+function filtered(){
+  let arr=S.filter(a=>phase(a)===seg).filter(withinRange).filter(quickMatch);
+  if(q){const n=q.toLowerCase();arr=arr.filter(a=>a.client.toLowerCase().includes(n)||a.contact.toLowerCase().includes(n)||a.owner.toLowerCase().includes(n))}
+  const val=a=>({client:a.client,start:a.start,end:a.end,projects:a.projects,eligible:a.eligible,survey:Object.keys(SURVEY_STATUS).indexOf(a.survey),test:Object.keys(TEST_STATUS).indexOf(a.test)})[sort.key];
+  arr.sort((x,y)=>{const a=val(x),b=val(y);return (a>b?1:a<b?-1:0)*sort.dir||x.client.localeCompare(y.client,'pl')});
+  return arr;
+}
+// Główna akcja wiersza — zależy od tego, na czym stanęła sprawa.
+function primaryAction(a){
+  if(phase(a)==='finished')return null;
+  if(a.survey==='none'||a.survey==='expired')return {label:a.survey==='expired'?'Wyślij ponownie':'Wyślij ankietę',act:'send',ico:'send'};
+  if(a.survey==='sent'||a.survey==='opened')return {label:'Przypomnij',act:'remind',ico:'mail'};
+  if(a.survey==='changes')return {label:'Wyślij poprawioną',act:'send',ico:'send'};
+  if(a.test==='blocked'||a.test==='none')return {label:'Uruchom test',act:'test',ico:'play'};
+  if(a.test==='internal_issues')return {label:'Rozbieżności',act:'test',ico:'alert',cls:'danger'};
+  if(a.test==='internal_ok')return {label:'Test z klientem',act:'test',ico:'play'};
+  if(a.test==='client_ok')return {label:'Przed startem',act:'test',ico:'flag'};
+  return null;
+}
+function surveyCell(a){
+  const d=SURVEY_STATUS[a.survey];let when='';
+  if(a.survey==='sent'||a.survey==='opened')when='wysłana 05.09 · ważna do '+fmtDate(a.expires);
+  if(a.survey==='confirmed'&&a.evidence)when=a.evidence.at+' · '+a.evidence.name;
+  if(a.survey==='changes')when='08.09 · zobacz uwagi klienta';
+  if(a.survey==='expired')when='wygasł 19.09 · wyślij ponownie';
+  return `<div class="cell-status">${badge(d)}${when?`<span class="when">${E(when)}</span>`:''}</div>`;
+}
+function testCell(a){
+  const d=TEST_STATUS[a.test];let extra='';
+  if(a.test==='internal_issues')extra=`<a class="small" href="#klient/${a.id}/Test">2 rozbieżności → raport</a>`;
+  else if(['internal_ok','client_ok','ready'].includes(a.test))extra=`<a class="small" href="#klient/${a.id}/Test">raport z 11.09</a>`;
+  else if(a.test==='blocked')extra=`<span class="when">czeka na ankietę</span>`;
+  return `<div class="cell-status">${badge(d)}${extra}</div>`;
+}
+function projectsCell(a){
+  if(a.projects===0)return `<span class="badge warn" title="Brak projektów wybranych do głosowania">${icon('alert')}brak</span>`;
+  return `<span class="num">${a.projects}</span>`;
+}
+function eligibleCell(a){
+  if(a.verification!=='residents_db')return `<span class="muted" title="Gmina nie weryfikuje w bazie mieszkańców">n/d</span>`;
+  if(a.eligible===0)return `<span class="badge warn" title="Gmina weryfikuje w bazie mieszkańców, a baza nie została wgrana">${icon('alert')}brak bazy</span>`;
+  return `<span class="num">${a.eligible.toLocaleString('pl-PL')}</span>`;
+}
+function th(label,key,cls=''){const active=sort.key===key;return `<th class="${cls}" ${active?`aria-sort="${sort.dir>0?'ascending':'descending'}"`:''}><button type="button" data-sort="${key}">${E(label)}${icon(active?(sort.dir>0?'sortUp':'sortDown'):'sort')}</button></th>`}
+
+/* ============================================================
+   WIDOK: LISTA
+   ============================================================ */
+function renderList(){
+  const counts={upcoming:0,running:0,finished:0};S.forEach(a=>counts[phase(a)]++);
+  const pool=S.filter(a=>phase(a)!=='finished');
+  const tiles=[
+    ['nosurvey','Bez ankiety','muted',pool.filter(a=>a.survey==='none'||a.survey==='expired').length,'do wysłania'],
+    ['waiting','Czekają na potwierdzenie','warn',pool.filter(a=>a.survey==='sent'||a.survey==='opened').length,'ankieta u klienta'],
+    ['issues','Rozbieżności','danger',pool.filter(a=>a.test==='internal_issues'||a.survey==='changes').length,'test lub uwagi klienta'],
+    ['ready','Gotowe do startu','ok',pool.filter(a=>a.test==='ready').length,'wszystkie kontrole OK'],
+  ];
+  const rows=filtered();
+  return `
+  <div class="pagehead">
+    <div><h1>Głosowania</h1><p>Jedna ankieta, potwierdzenie klienta i test przed startem — wszystko z tej listy.</p></div>
+    <div class="actions"><button class="btn" data-act="reset">${icon('refresh')}Przywróć dane demo</button></div>
+  </div>
+
+  <div class="stats" role="group" aria-label="Szybkie filtry">
+    ${tiles.map(([k,l,c,n,sub])=>`<button type="button" class="stat" data-quick="${k}" aria-pressed="${quick===k}"><span class="lbl"><span class="dot ${c}" aria-hidden="true"></span>${l}</span><span class="val num">${n}</span><span class="sub">${sub}</span></button>`).join('')}
+  </div>
+
+  <section class="panel" aria-labelledby="list-title">
+    <div class="toolbar">
+      <div class="segments" role="group" aria-label="Faza głosowania">
+        ${[['upcoming','Nadchodzące'],['running','Trwające'],['finished','Zakończone']].map(([k,l])=>`<button type="button" data-seg="${k}" aria-pressed="${seg===k}">${l}<span class="n">${counts[k]}</span></button>`).join('')}
+      </div>
+      ${seg==='upcoming'?`<label class="visually-hidden" for="range">Zakres</label><select id="range" data-range>${[['2w','Najbliższe 2 tygodnie'],['1m','Najbliższy miesiąc'],['3m','Najbliższe 3 miesiące'],['all','Wszystkie nadchodzące']].map(([k,l])=>`<option value="${k}" ${range===k?'selected':''}>${l}</option>`).join('')}</select>`:''}
+      <div class="search">${icon('search')}<label class="visually-hidden" for="q">Szukaj klienta lub osoby</label><input id="q" type="search" placeholder="Szukaj gminy, kontaktu, opiekuna…" value="${E(q)}" autocomplete="off"></div>
+      <button type="button" class="btn ghost sm clearfilter ${quick||q?'on':''}" data-act="clear">Wyczyść filtry</button>
+      <span class="count" id="list-title">${rows.length} ${plural(rows.length,'głosowanie','głosowania','głosowań')}</span>
+    </div>
+    ${rows.length?`<div class="tablewrap"><table>
+      <thead><tr>
+        ${th('Klient','client')}
+        ${th('Ankieta','survey')}
+        ${th('Test','test')}
+        ${th('Głosowanie','start')}
+        ${th('Projekty','projects','right')}
+        ${th('W bazie','eligible','right')}
+        <th>Kontakt</th>
+        <th class="right"><span class="visually-hidden">Akcje</span></th>
+      </tr></thead>
+      <tbody>${rows.map((a,i)=>{const pa=primaryAction(a);return `<tr>
+        <td><div class="client"><a href="#klient/${a.id}"><span class="nr">${i+1}.</span>${E(a.client)}</a><span class="small muted">${E(a.owner.replace(' — opiekun',''))}</span></div></td>
+        <td>${surveyCell(a)}</td>
+        <td>${testCell(a)}</td>
+        <td><div class="dates"><div><span>od</span>${fmtDate(a.start)} ${fmtTime(a.start)}</div><div><span>do</span>${fmtDate(a.end)} ${fmtTime(a.end)}</div></div></td>
+        <td class="right">${projectsCell(a)}</td>
+        <td class="right">${eligibleCell(a)}</td>
+        <td><div class="contact"><span class="who">${E(a.contact)}</span><span class="small muted">${E(a.position)}</span><span class="links"><a class="iconbtn" href="mailto:${E(a.email)}" title="${E(a.email)}" aria-label="Napisz e-mail: ${E(a.email)}">${icon('mail')}</a><a class="iconbtn" href="tel:${E(a.phone.replace(/\s/g,''))}" title="${E(a.phone)}" aria-label="Zadzwoń: ${E(a.phone)}">${icon('phone')}</a><a class="iconbtn" href="#klient/${a.id}" title="Karta klienta" aria-label="Karta klienta ${E(a.client)}">${icon('user')}</a></span></div></td>
+        <td class="right"><div class="rowactions">${pa?`<button type="button" class="btn sm ${pa.cls||'primary'}" data-act="${pa.act}" data-id="${a.id}">${icon(pa.ico)}${pa.label}</button>`:`<a class="btn sm" href="#klient/${a.id}">Otwórz</a>`}</div></td>
+      </tr>`}).join('')}</tbody>
+    </table></div>`:`<div class="empty">${icon('inbox')}<h3>Brak głosowań dla tych filtrów</h3><p class="muted">Zmień fazę, zakres dat albo wyczyść szybki filtr.</p><button type="button" class="btn" data-act="clear">Wyczyść filtry</button></div>`}
+  </section>`;
+}
+
+/* ============================================================
+   WIDOK: KARTA KLIENTA
+   ============================================================ */
+function unresolved(a){return Object.keys(a.rules).filter(k=>JSON.stringify(a.rules[k])!==JSON.stringify(a.platform[k]))}
+function renderDetail(a){
+  const pa=primaryAction(a);
+  const tabs=['Klient','Uchwała','Platforma','Test','Rozmowy i notatki'];
+  const diff=unresolved(a).length;
+  return `
+  <a class="back" href="#lista">${icon('back')}Lista głosowań</a>
+  <div class="pagehead">
+    <div><h1>${E(a.client)}</h1><p>Głosowanie · edycja ${E(a.edition)} &nbsp; ${badge(SURVEY_STATUS[a.survey])} &nbsp; ${badge(TEST_STATUS[a.test])}</p></div>
+    <div class="actions">
+      <a class="btn" href="${E(a.platformUrl)}" target="_blank" rel="noopener">${icon('eye')}Platforma gminy <span class="visually-hidden">(otwiera się w nowej karcie)</span></a>
+      ${pa?`<button type="button" class="btn primary" data-act="${pa.act}" data-id="${a.id}">${icon(pa.ico)}${pa.label}</button>`:''}
+    </div>
+  </div>
+  <div class="meta">
+    <div><span>Głosowanie od</span><strong>${fmtDate(a.start)}, ${fmtTime(a.start)}</strong></div>
+    <div><span>Głosowanie do</span><strong>${fmtDate(a.end)}, ${fmtTime(a.end)}</strong></div>
+    <div><span>Projekty do głosowania</span><strong>${a.projects||'brak'}</strong></div>
+    <div><span>Uprawnieni w bazie</span><strong>${a.verification==='residents_db'?(a.eligible?a.eligible.toLocaleString('pl-PL'):'baza nie wgrana'):'nie dotyczy'}</strong></div>
+    <div><span>Opiekun</span><strong>${E(a.owner)}</strong></div>
+    <div><span>Umowa</span><strong>${E(a.contract)}</strong></div>
+  </div>
+  <div class="split">
+    <div>
+      <div class="tabs" role="tablist" aria-label="Sekcje karty klienta">
+        ${tabs.map(t=>`<button type="button" role="tab" aria-selected="${tab===t}" data-tab="${t}">${t}${t==='Test'&&diff?`<span class="pillnum" aria-label="${diff} ${plural(diff,'rozbieżność','rozbieżności','rozbieżności')}">${diff}</span>`:''}</button>`).join('')}
+      </div>
+      <div role="tabpanel">${({'Klient':tabClient,'Uchwała':tabResolution,'Platforma':tabPlatform,'Test':tabTest,'Rozmowy i notatki':tabNotes})[tab](a)}</div>
+    </div>
+    <aside>
+      <section class="panel"><div class="panelhead"><h3>Kontakt w gminie</h3></div><div class="panelbody">
+        <strong>${E(a.contact)}</strong><p class="small muted">${E(a.position)}</p>
+        <p style="margin-top:12px"><a href="mailto:${E(a.email)}">${E(a.email)}</a></p>
+        <p><a href="tel:${E(a.phone.replace(/\s/g,''))}">${E(a.phone)}</a></p>
+        <div class="actions" style="margin-top:14px">
+          <button type="button" class="btn sm" data-act="${a.survey==='none'||a.survey==='expired'||a.survey==='changes'?'send':'remind'}" data-id="${a.id}">${icon('send')}${a.survey==='none'||a.survey==='expired'?'Wyślij ankietę':a.survey==='changes'?'Wyślij poprawioną':'Przypomnij o ankiecie'}</button>
+          <button type="button" class="btn sm" data-act="note" data-id="${a.id}">Dodaj notatkę</button>
+        </div>
+      </div></section>
+      <section class="panel"><div class="panelhead"><h3>Historia</h3></div><div class="panelbody">
+        <ol class="timeline">${a.events.slice(0,6).map(e=>`<li><time>${E(e.at)}</time><div>${E(e.text)}<div class="by">${E(e.by)}</div></div></li>`).join('')}</ol>
+      </div></section>
+    </aside>
+  </div>`;
+}
+function tabClient(a){
+  const s=a.survey;
+  let head='';
+  if(s==='none')head=`<div class="notice info">${icon('mail')}<div><strong>Ankieta nie została jeszcze wysłana.</strong><br>Klient otrzyma link do jednej, stałej ankiety z zasadami głosowania i potwierdzi je oświadczeniem.</div></div>`;
+  if(s==='sent'||s==='opened')head=`<div class="notice warn">${icon('clock')}<div><strong>${s==='opened'?'Klient otworzył ankietę, ale jej nie potwierdził.':'Czekamy na odpowiedź klienta.'}</strong><br>Link ważny do ${fmtDate(a.expires)}. Test nie ruszy bez potwierdzenia.</div></div>`;
+  if(s==='changes')head=`<div class="notice danger">${icon('alert')}<div><strong>Klient zgłosił zmiany.</strong><br>„Głosowanie do 27.09 15:59, nie 23:59”. Popraw zasady i wyślij ankietę ponownie.</div></div>`;
+  if(s==='expired')head=`<div class="notice danger">${icon('alert')}<div><strong>Link do ankiety wygasł.</strong><br>Wyślij ankietę ponownie — poprzednie odpowiedzi nie zostały zapisane.</div></div>`;
+  if(s==='confirmed')head=`<div class="notice ok">${icon('check')}<div><strong>Zasady potwierdzone przez klienta.</strong><br>Potwierdzenie jest zablokowane do edycji. Zmiany wymagają nowej ankiety.</div></div>`;
+  return head+`
+  <section class="panel"><div class="panelhead"><h2>${s==='confirmed'?'Potwierdzone zasady · v1':'Zasady do potwierdzenia'}</h2>${s!=='confirmed'?`<button type="button" class="btn sm" data-act="edit-rules" data-id="${a.id}">Edytuj zasady</button>`:''}</div>
+    <div class="panelbody"><div class="tablewrap"><table><tbody>${SURVEY.questions.map(([k,l])=>`<tr><td style="width:45%">${E(l)}</td><td>${E(showVal(k,a.rules[k]))}</td></tr>`).join('')}</tbody></table></div></div></section>
+  ${a.evidence?`<section class="panel"><div class="panelhead"><h3>Dowód potwierdzenia</h3></div><div class="panelbody">
+    <div class="kv"><span>Osoba</span><strong>${E(a.evidence.name)}, ${E(a.evidence.position)}</strong></div>
+    <div class="kv"><span>E-mail</span><span>${E(a.evidence.email)}</span></div>
+    <div class="kv"><span>Data</span><span>${E(a.evidence.at)}</span></div>
+    <div class="kv"><span>Oświadczenie</span><span class="small">${E(SURVEY.closing)}</span></div>
+    <div class="kv"><span>Suma kontrolna</span><span class="small">${E(a.evidence.hash)}</span></div>
+  </div></section>`:''}`;
+}
+function tabResolution(a){
+  return a.resolution?`
+  <section class="panel"><div class="panelhead"><h2>Uchwała i regulamin</h2><button type="button" class="btn sm" data-act="upload" data-id="${a.id}">Wgraj nową wersję</button></div><div class="panelbody">
+    <div class="kv"><span>Plik</span><a href="#">${E(a.resolution.file)}</a></div>
+    <p class="small muted" style="margin:12px 0">Pola odczytane z dokumentu. Zatwierdź każde, żeby trafiło do porównania w Teście.</p>
+    <div class="tablewrap"><table><thead><tr><th>Pole</th><th>Wartość z uchwały</th><th>Cytat</th><th></th></tr></thead><tbody>
+    ${Object.entries(a.resolution.fields).map(([k,f])=>`<tr><td>${E(SURVEY.questions.find(x=>x[0]===k)?.[1]||k)}</td><td>${E(showVal(k,f.value))}</td><td class="small muted">„${E(f.quote)}”</td><td><button type="button" class="btn sm" data-act="toast" data-msg="Pole zatwierdzone (demo)">Zatwierdź</button></td></tr>`).join('')}
+    </tbody></table></div>
+  </div></section>`:`
+  <section class="panel"><div class="panelhead"><h2>Uchwała i regulamin</h2></div><div class="panelbody">
+    <div class="notice info">${icon('file')}<div><strong>Brak uchwały dla tej edycji.</strong><br>Bez uchwały test porówna tylko potwierdzenie klienta z konfiguracją platformy.</div></div>
+    <div class="dropzone">Przeciągnij plik PDF lub DOCX albo <button type="button" class="btn sm" data-act="upload" data-id="${a.id}">wybierz z dysku</button></div>
+  </div></section>`;
+}
+function tabPlatform(a){
+  return `
+  <section class="panel"><div class="panelhead"><h2>Konfiguracja platformy</h2><div class="actions"><button type="button" class="btn sm" data-act="toast" data-msg="Pobrano aktualne ustawienia z platformy (demo)">${icon('refresh')}Pobierz z platformy</button></div></div><div class="panelbody">
+    <div class="kv"><span>Adres</span><a href="${E(a.platformUrl)}" target="_blank" rel="noopener">${E(a.platformUrl)}</a></div>
+    <div class="kv"><span>Ostatni snapshot</span><span>11.09.2026, 08:10 · v1</span></div>
+    <div class="kv"><span>Połączenie</span><span class="badge ok">${icon('check')}API dostępne</span></div>
+    <p class="small muted" style="margin:14px 0 8px">Ustawienia głosowania odczytane z panelu gminy (tylko pola objęte ankietą):</p>
+    <pre class="mono">${E(JSON.stringify(a.platform,null,2))}</pre>
+  </div></section>`;
+}
+function showVal(k,v){
+  if(v===null||v===undefined||v==='')return '—';
+  if(k==='date_start'||k==='date_end')return fmtLong(v);
+  if(k==='eligibility_check')return ({none:'Brak weryfikacji w bazie',residents_db:'Baza mieszkańców',address_list:'Lista adresów'})[v]||v;
+  if(k==='age_rule')return ({min_age_parent_consent:'Min. 16 lat, zgoda rodzica dla młodszych',no_limit:'Bez limitu wieku'})[v]||v;
+  if(k==='info_clause')return ({new:'Nowa klauzula',previous_year:'Z poprzedniej edycji'})[v]||v;
+  if(typeof v==='boolean')return v?'Tak':'Nie';
+  return String(v);
+}
+function tabTest(a){
+  if(a.survey!=='confirmed')return `<section class="panel"><div class="panelbody"><div class="notice warn" style="margin:0">${icon('clock')}<div><strong>Test czeka na potwierdzenie ankiety.</strong><br>Porównanie zasad ma sens dopiero, gdy klient potwierdzi, co ma być skonfigurowane.</div></div></div></section>`;
+  const diffs=unresolved(a);
+  return `
+  ${diffs.length?`<div class="notice danger">${icon('alert')}<div><strong>${diffs.length} ${plural(diffs.length,'rozbieżność','rozbieżności','rozbieżności')} między potwierdzeniem klienta a platformą.</strong><br>Popraw ustawienia w panelu gminy albo zapisz decyzję, dlaczego różnica jest dopuszczalna.</div></div>`:`<div class="notice ok">${icon('check')}<div><strong>Konfiguracja platformy zgodna z potwierdzeniem klienta.</strong><br>Możesz przejść do listy kontrolnej i testu z klientem.</div></div>`}
+  <section class="panel"><div class="panelhead"><h2>Porównanie: klient · uchwała · platforma</h2><button type="button" class="btn sm primary" data-act="rerun" data-id="${a.id}">${icon('play')}Uruchom porównanie</button></div><div class="panelbody">
+    <div class="tablewrap"><table><thead><tr><th>Pole</th><th>Potwierdzenie klienta</th><th>Uchwała</th><th>Platforma</th><th>Wynik</th></tr></thead><tbody>
+    ${SURVEY.questions.map(([k,l])=>{const d=diffs.includes(k);const r=a.resolution?.fields?.[k];return `<tr class="${d?'diff':''}"><td>${E(l)}</td><td>${E(showVal(k,a.rules[k]))}</td><td class="${r?'':'muted'}">${r?E(showVal(k,r.value)):'—'}</td><td>${E(showVal(k,a.platform[k]))}</td><td>${d?`<span class="badge danger">${icon('alert')}różni się</span>`:`<span class="badge ok">${icon('check')}zgodne</span>`}</td></tr>`}).join('')}
+    </tbody></table></div>
+  </div></section>
+  <section class="panel"><div class="panelhead"><h2>Lista kontrolna przed startem</h2><span class="small muted">${Object.keys(a.checks).length}/${CHECKS.length}</span></div><div class="panelbody">
+    ${CHECKS.map(([k,t,h])=>{const c=a.checks[k];return `<div class="check"><input type="checkbox" id="chk-${k}" data-check="${k}" data-id="${a.id}" ${c?'checked':''}><label for="chk-${k}"><span>${E(t)}</span><span class="hint">${E(h)}</span>${c?`<span class="by">${E(c.by)} · ${E(c.at)}</span>`:''}</label></div>`}).join('')}
+    <div class="actions" style="margin-top:16px"><button type="button" class="btn primary" data-act="ready" data-id="${a.id}" ${Object.keys(a.checks).length<CHECKS.length||diffs.length?'disabled':''}>${icon('flag')}Oznacz jako gotowe do startu</button>${Object.keys(a.checks).length<CHECKS.length||diffs.length?`<span class="small muted">Wymaga wszystkich pozycji listy i braku rozbieżności.</span>`:''}</div>
+  </div></section>`;
+}
+function tabNotes(a){
+  return `
+  <section class="panel"><div class="panelhead"><h2>Rozmowy i notatki</h2></div><div class="panelbody">
+    <form data-form="note" data-id="${a.id}">
+      <div class="field"><label for="note-text">Nowy wpis</label><textarea id="note-text" name="text" placeholder="Co ustaliliście z klientem, co trzeba sprawdzić…" required></textarea></div>
+      <div class="actions"><button type="submit" class="btn primary">Dodaj wpis</button></div>
+    </form>
+    ${a.notes.length?`<ol class="timeline" style="margin-top:20px">${a.notes.map(n=>`<li><time>${E(n.at)}</time><div>${E(n.text)}<div class="by">${E(n.by)}</div></div></li>`).join('')}</ol>`:`<p class="small muted" style="margin-top:20px">Brak notatek. Zapisuj tu ustalenia z rozmów — trafią do historii klienta.</p>`}
+  </div></section>`;
+}
+
+/* ============================================================
+   RENDER I ROUTING
+   ============================================================ */
+const main=document.getElementById('main');
+function render(){
+  if(view==='klient'){const a=byId(currentId);if(!a){location.hash='#lista';return}main.innerHTML=renderDetail(a);document.title=a.client+' — Testy głosowań';}
+  else{main.innerHTML=renderList();document.title='Testy głosowań — MediaPark — makieta';}
+}
+function route(){
+  const h=location.hash.replace('#','')||'lista';
+  const [v,id,t]=h.split('/');
+  if(v==='klient'&&id){view='klient';currentId=Number(id);if(t)tab=decodeURIComponent(t);}
+  else{view='lista';}
+  render();
+  main.focus({preventScroll:true});
+  window.scrollTo({top:0});
+}
+window.addEventListener('hashchange',route);
+
+/* ============================================================
+   ZDARZENIA
+   ============================================================ */
+const toastEl=document.getElementById('toast');let toastT;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),4500)}
+function addEvent(a,text,by){a.events.unshift({text,by:by||a.owner,at:now()});save()}
+
+const dlg=document.getElementById('dlg-send');
+function openSend(a,mode){
+  const remind=mode==='remind';
+  document.getElementById('dlg-send-title').textContent=remind?'Przypomnij o ankiecie':'Wyślij ankietę';
+  document.getElementById('dlg-send-body').innerHTML=`
+    <p class="small muted" style="margin-bottom:12px">Do: <strong>${E(a.contact)}</strong> &lt;${E(a.email)}&gt; · ${E(a.client)}</p>
+    <div class="preview">
+      <strong>${remind?'Przypomnienie: ':''}${E(SURVEY.title)}</strong>
+      <p class="small muted" style="margin-top:4px">Ta sama ankieta dla każdej gminy. Klient odpowiada na pytania i podpisuje oświadczenie.</p>
+      <ol>${SURVEY.questions.map(([,l])=>`<li>${E(l)}</li>`).join('')}</ol>
+      <p class="small" style="margin-top:10px"><em>${E(SURVEY.closing)}</em></p>
+    </div>
+    <div class="field" style="margin-top:16px"><label for="send-msg">Wiadomość do klienta (opcjonalnie)</label><textarea id="send-msg" rows="3" placeholder="np. Prosimy o potwierdzenie do piątku — wtedy zdążymy z testem przed startem.">${remind?'Dzień dobry, przypominamy o ankiecie z zasadami głosowania. Link jest ważny do '+fmtDate(a.expires)+'.':''}</textarea></div>
+    <p class="small muted">Link będzie ważny 14 dni. Po potwierdzeniu odpowiedzi klienta zostaną zablokowane do edycji.</p>`;
+  const ok=document.getElementById('dlg-send-ok');
+  ok.innerHTML=icon('send')+(remind?'Wyślij przypomnienie':'Wyślij ankietę');
+  ok.onclick=()=>{
+    if(remind){addEvent(a,'Wysłano przypomnienie o ankiecie do '+a.contact);toast('Przypomnienie wysłane do '+a.contact+'.');}
+    else{a.survey='sent';a.test='blocked';a.expires='2026-10-01';addEvent(a,'Wysłano ankietę do '+a.contact);toast('Ankieta wysłana do '+a.contact+'. Link ważny do '+fmtDate(a.expires)+'.');}
+    dlg.close();render();
+  };
+  dlg.showModal();
+}
+dlg.addEventListener('click',e=>{if(e.target.closest('[data-close]'))dlg.close()});
+
+document.addEventListener('click',e=>{
+  const seg_=e.target.closest('[data-seg]');if(seg_){seg=seg_.dataset.seg;render();return}
+  const qk=e.target.closest('[data-quick]');if(qk){quick=quick===qk.dataset.quick?'':qk.dataset.quick;render();return}
+  const srt=e.target.closest('[data-sort]');if(srt){const k=srt.dataset.sort;if(sort.key===k)sort.dir*=-1;else sort={key:k,dir:1};render();return}
+  const tb=e.target.closest('[data-tab]');if(tb){tab=tb.dataset.tab;location.hash=`#klient/${currentId}/${encodeURIComponent(tab)}`;return}
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.id?byId(b.dataset.id):null;
+  switch(b.dataset.act){
+    case 'clear':quick='';q='';render();break;
+    case 'reset':if(confirm('Przywrócić dane przykładowe? Twoje zmiany w makiecie zostaną usunięte.')){localStorage.removeItem(VERSION);S=seed();render();toast('Dane przykładowe przywrócone.')}break;
+    case 'send':openSend(a,'send');break;
+    case 'remind':openSend(a,'remind');break;
+    case 'test':location.hash=`#klient/${a.id}/Test`;break;
+    case 'note':location.hash=`#klient/${a.id}/${encodeURIComponent('Rozmowy i notatki')}`;setTimeout(()=>document.getElementById('note-text')?.focus(),50);break;
+    case 'rerun':{const d=unresolved(a);a.test=d.length?'internal_issues':(a.checks.client?'client_ok':'internal_ok');addEvent(a,d.length?`Test wewnętrzny: ${d.length} ${plural(d.length,'rozbieżność','rozbieżności','rozbieżności')}`:'Test wewnętrzny: bez rozbieżności');render();toast(d.length?'Porównanie zakończone: są rozbieżności.':'Porównanie zakończone: konfiguracja zgodna.');break}
+    case 'ready':a.test='ready';addEvent(a,'Oznaczono jako gotowe do startu');render();toast(a.client+': gotowe do startu.');break;
+    case 'edit-rules':toast('Edycja zasad — w makiecie tylko podgląd.');break;
+    case 'upload':toast('Wgrywanie plików — w makiecie tylko podgląd.');break;
+    case 'toast':toast(b.dataset.msg||'OK');break;
+  }
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='q'){q=e.target.value;const rows=filtered();const tbody=main.querySelector('tbody');/* pełny render psułby fokus w polu — odświeżamy tylko tabelę i licznik */
+    const tmp=document.createElement('div');tmp.innerHTML=renderList();const nt=tmp.querySelector('tbody'),ne=tmp.querySelector('.empty');const panel=main.querySelector('.panel');
+    const wrap=panel.querySelector('.tablewrap'),emp=panel.querySelector('.empty');
+    if(wrap)wrap.remove();if(emp)emp.remove();
+    panel.appendChild(nt?tmp.querySelector('.tablewrap'):ne);
+    main.querySelector('#list-title').textContent=`${rows.length} ${plural(rows.length,'głosowanie','głosowania','głosowań')}`;
+    main.querySelector('.clearfilter').classList.toggle('on',!!(quick||q));
+  }
+});
+document.addEventListener('change',e=>{
+  if(e.target.matches('[data-range]')){range=e.target.value;render();return}
+  const c=e.target.closest('[data-check]');if(c){const a=byId(c.dataset.id);const k=c.dataset.check;if(c.checked){a.checks[k]={by:a.owner,at:now()};if(k==='client'&&a.test==='internal_ok')a.test='client_ok';}else delete a.checks[k];save();render();}
+});
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('[data-form="note"]');if(!f)return;e.preventDefault();
+  const a=byId(f.dataset.id);const text=f.text.value.trim();if(!text)return;
+  a.notes.unshift({text,by:a.owner,at:now()});addEvent(a,'Dodano notatkę');render();toast('Notatka zapisana.');
+});
+route();
+</script>
+</body>
+</html>

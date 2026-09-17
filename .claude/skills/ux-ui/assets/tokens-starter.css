@@ -1,0 +1,223 @@
+/* ==========================================================================
+   Tokeny startowe — jasny/ciemny tryb. Skopiuj, zmień wartości pod gminę.
+   Nazwy po roli, nie po barwie. Sprawdź kontrast:
+     python scripts/contrast.py --css tokens-starter.css
+   ========================================================================== */
+
+:root {
+  color-scheme: light dark;
+
+  /* powierzchnie */
+  --bg: #f3fafc;
+  --surface: #ffffff;
+  --tint: #e6f6fa;
+  --line: #dde8eb;         /* separatory, tło tabel — NIE na obramowania pól */
+  --line-strong: #6f939a;  /* obramowania inputów, ikony UI — ≥3:1 na białym */
+
+  /* tekst */
+  --ink: #2b323f;
+  --ink-strong: #0f3b46;
+  --muted: #5b6668;
+
+  /* akcent */
+  --accent: #2db3d2;
+  --accent-deep: #2f96b0;
+  --accent-text: #1b5a68;
+  --accent-link: #1f6f84;
+  --on-accent: #ffffff;
+  --primary: #23788f;        /* tło przycisku primary — biały tekst ≥4.5:1 */
+  --primary-hover: #1f6f84;
+  --grad: linear-gradient(125deg, #23788f 0%, #1f6f84 100%);
+
+  /* semantyczne */
+  --ok: #1f7a4d;        --ok-bg: #eefbf3;
+  --warn: #8a5a00;      --warn-bg: #fff7e6;
+  --danger: #b3261e;    --danger-bg: #fdecea;
+  --info: #1b5a68;      --info-bg: #e6f6fa;
+
+  /* kształt i głębia */
+  --radius: 16px;
+  --radius-sm: 10px;
+  --pill: 999px;
+  --shadow: 0 1px 2px rgba(15, 59, 70, .06), 0 8px 24px rgba(73, 164, 186, .14);
+  --shadow-lift: 0 2px 4px rgba(15, 59, 70, .08), 0 14px 36px rgba(73, 164, 186, .22);
+  --focus: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent-deep);
+
+  /* rytm */
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+  --space-5: 1.5rem; --space-6: 2rem;  --space-7: 2.5rem; --space-8: 3rem;
+  --space-10: 4rem;  --space-12: 6rem;
+  --max: 1180px;
+  --gutter: clamp(1rem, 4vw, 2rem);
+
+  /* typografia */
+  --font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fs-display: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+  --fs-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  --fs-h3: 1.25rem;
+  --fs-body: 1rem;
+  --fs-small: .875rem;
+  --fs-label: .8125rem;
+  --lh-tight: 1.15;
+  --lh-body: 1.55;
+}
+
+/* Tryb ciemny z systemu — chyba że użytkownik wybrał jasny ręcznie */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1a1e;
+    --surface: #122a30;
+    --tint: #1b4652;
+    --line: #22414a;
+    --line-strong: #527f8a;
+
+    --ink: #e3eef1;
+    --ink-strong: #f3fafc;
+    --muted: #a4b8bd;
+
+    --accent: #3cc3e2;
+    --accent-deep: #49a4ba;
+    --accent-text: #8fd3e4;
+    --accent-link: #7fd4e6;
+    --on-accent: #0b1a1e;
+    --primary: #3cc3e2;
+    --primary-hover: #49a4ba;
+    --grad: linear-gradient(125deg, #49a4ba 0%, #3cc3e2 100%);
+
+    --ok: #8fdcb2;        --ok-bg: #12352a;
+    --warn: #f2c46d;      --warn-bg: #3a2e0f;
+    --danger: #f2a69f;    --danger-bg: #3b1512;
+    --info: #8fd3e4;      --info-bg: #1b4652;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, .35), 0 14px 36px rgba(0, 0, 0, .45);
+  }
+}
+
+/* Tryb ciemny wybrany ręcznie (przełącznik zapisuje data-theme w localStorage) */
+:root[data-theme="dark"] {
+  --bg: #0b1a1e;
+  --surface: #122a30;
+  --tint: #1b4652;
+  --line: #22414a;
+  --line-strong: #527f8a;
+  --ink: #e3eef1;
+  --ink-strong: #f3fafc;
+  --muted: #a4b8bd;
+  --accent: #3cc3e2;
+  --accent-deep: #49a4ba;
+  --accent-text: #8fd3e4;
+  --accent-link: #7fd4e6;
+  --on-accent: #0b1a1e;
+  --primary: #3cc3e2;
+  --primary-hover: #49a4ba;
+  --grad: linear-gradient(125deg, #49a4ba 0%, #3cc3e2 100%);
+  --ok: #8fdcb2;        --ok-bg: #12352a;
+  --warn: #f2c46d;      --warn-bg: #3a2e0f;
+  --danger: #f2a69f;    --danger-bg: #3b1512;
+  --info: #8fd3e4;      --info-bg: #1b4652;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, .35), 0 14px 36px rgba(0, 0, 0, .45);
+}
+
+/* --------------------------------------------------------------------------
+   Baza — minimalny reset i domyślne zachowania dostępności
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+h1, h2, h3 { color: var(--ink-strong); line-height: var(--lh-tight); text-wrap: balance; margin: 0 0 var(--space-3); }
+h1 { font-size: var(--fs-display); font-weight: 700; }
+h2 { font-size: var(--fs-h2); font-weight: 600; }
+h3 { font-size: var(--fs-h3); font-weight: 600; }
+p  { margin: 0 0 var(--space-4); max-width: 65ch; }
+a  { color: var(--accent-link); text-underline-offset: .15em; }
+a:hover { color: var(--accent-text); }
+
+:focus-visible { outline: none; box-shadow: var(--focus); border-radius: var(--radius-sm); }
+
+.skip-link {
+  position: absolute; left: var(--space-4); top: -100px;
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface); color: var(--ink-strong);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-lift); z-index: 1000;
+}
+.skip-link:focus { top: var(--space-4); }
+
+.container { max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* --------------------------------------------------------------------------
+   Przyciski — jedna klasa bazowa, warianty po roli
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: 44px; padding: 0 var(--space-6);
+  border-radius: var(--pill); border: 2px solid transparent;
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.btn:active { transform: scale(.98); }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+
+.btn-primary { background: var(--grad); color: var(--on-accent); box-shadow: var(--shadow); }
+.btn-primary:hover { box-shadow: var(--shadow-lift); filter: brightness(.95); }
+
+.btn-secondary { background: transparent; color: var(--accent-text); border-color: var(--accent-deep); }
+.btn-secondary:hover { background: var(--tint); }
+
+.btn-ghost { background: transparent; color: var(--accent-text); }
+.btn-ghost:hover { background: var(--tint); }
+
+.btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.btn-danger:hover { background: var(--danger-bg); }
+
+/* --------------------------------------------------------------------------
+   Pola formularza
+   -------------------------------------------------------------------------- */
+.field { display: grid; gap: var(--space-2); margin-bottom: var(--space-5); }
+.field label { font-weight: 600; color: var(--ink-strong); }
+.field .hint { color: var(--muted); font-size: var(--fs-small); }
+.field input, .field select, .field textarea {
+  font: inherit; color: var(--ink); background: var(--surface);
+  min-height: 44px; padding: 0 var(--space-3);
+  border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
+}
+.field textarea { padding: var(--space-3); min-height: 120px; }
+.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible {
+  border-color: var(--accent-deep); box-shadow: var(--focus);
+}
+.field.is-invalid input, .field.is-invalid select, .field.is-invalid textarea { border-color: var(--danger); }
+.field .error { color: var(--danger); font-size: var(--fs-small); font-weight: 500; display: flex; gap: var(--space-1); align-items: flex-start; }
+
+/* --------------------------------------------------------------------------
+   Karta, badge, alert
+   -------------------------------------------------------------------------- */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--space-5); }
+
+.badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: .2em .7em; border-radius: var(--pill); font-size: var(--fs-label); font-weight: 600; }
+.badge-ok     { background: var(--ok-bg);     color: var(--ok); }
+.badge-warn   { background: var(--warn-bg);   color: var(--warn); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-info   { background: var(--info-bg);   color: var(--info); }
+
+.alert { display: flex; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-sm); border: 1px solid transparent; }
+.alert-ok     { background: var(--ok-bg);     color: var(--ok);     border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.alert-warn   { background: var(--warn-bg);   color: var(--warn);   border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+.alert-danger { background: var(--danger-bg); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); }
+.alert-info   { background: var(--info-bg);   color: var(--info);   border-color: color-mix(in srgb, var(--info) 30%, transparent); }
