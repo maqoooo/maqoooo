@@ -41,20 +41,8 @@ button,input,select,textarea{font:inherit}
 .small{font-size:.8125rem}.muted{color:var(--muted)}.num{font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* ---------- pasek górny ---------- */
-.topbar{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
-.topbar .inner{max-width:var(--max);margin-inline:auto;padding:0 clamp(16px,3vw,32px);min-height:64px;display:flex;align-items:center;gap:24px}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink-strong)}
-.brand .mark{width:36px;height:36px;border-radius:9px;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;letter-spacing:.02em}
-.brand strong{font-weight:600;display:block;line-height:1.15}
-.brand span{display:block;font-size:.75rem;color:var(--muted)}
-.topbar .spacer{flex:1}
-.demo{font-size:.75rem;padding:4px 10px;background:var(--warn-bg);color:var(--warn);border-radius:var(--pill);font-weight:500}
-.user{display:flex;align-items:center;gap:10px}
-.avatar{width:34px;height:34px;border-radius:50%;background:var(--tint);color:var(--accent-text);display:grid;place-items:center;font-weight:600;font-size:.75rem}
-
 /* ---------- układ ---------- */
-main{max-width:var(--max);margin-inline:auto;padding:24px clamp(16px,3vw,32px) 64px}
+main{max-width:var(--max);margin-inline:auto;padding:32px clamp(16px,3vw,32px) 64px}
 .pagehead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
 .pagehead p{color:var(--muted);margin-top:4px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -202,24 +190,12 @@ dialog .dfoot{padding:14px 22px;border-top:1px solid var(--line);display:flex;ju
   .filter{width:100%;flex-wrap:wrap}.filter select{flex:1}
   .toolbar .count{margin-left:0;width:100%}
   .rowactions{justify-content:flex-start}
-  .topbar .inner{gap:12px}.brand span{display:none}.user .name{display:none}
 }
 </style>
 </head>
 <body>
 <a class="skip-link" href="#main">Przejdź do treści</a>
 
-<header class="topbar">
-  <div class="inner">
-    <a class="brand" href="#lista" aria-label="Testy głosowań, strona główna">
-      <span class="mark" aria-hidden="true">MP</span>
-      <span><strong>Testy głosowań</strong><span>Budżet obywatelski · MediaPark</span></span>
-    </a>
-    <span class="spacer"></span>
-    <span class="demo">Makieta · dane przykładowe</span>
-    <div class="user"><span class="avatar" aria-hidden="true">AK</span><span class="name small">Anna — opiekun</span></div>
-  </div>
-</header>
 
 <main id="main" tabindex="-1"></main>
 
