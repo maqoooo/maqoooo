@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deklaracje gminne</title>
+<meta name="description" content="Wybierz deklarację podatkową i wypełnij ją w kilka minut z pomocą asystenta lub w klasycznym formularzu. Bez konta, bez wizyty w urzędzie.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --accent:#2db3d2;
+  --accent-deep:#49a4ba;
+  --accent-text:#1b5a68;
+  --accent-link:#2b8ea8;
+  --ink:#2b323f;
+  --ink-strong:#0f3b46;
+  --muted:#5b6668;
+  --muted-2:#7d9096;
+  --bg:#f3fafc;
+  --surface:#ffffff;
+  --surface-2:#fbfdfe;
+  --line:#dde8eb;
+  --line-2:#d3e3e8;
+  --tint:#caecf4;
+  --tint-2:#eaf7fb;
+  --tint-3:#f0fafd;
+  --ok-bg:#eefbf3;
+  --ok-text:#1f7a4d;
+  --logo-bg:#0f3b46;
+  --logo-ink:#7fd4e6;
+  --shadow:0 0 22px rgba(73,164,186,.16);
+  --shadow-lift:0 14px 36px rgba(73,164,186,.22);
+  --glow:rgba(45,179,210,.36);
+  --grad:linear-gradient(125deg,#49a4ba 0%,#2db3d2 100%);
+  --on-grad:#ffffff;
+  --radius:16px;
+  --pill:50px;
+  --max:1180px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --accent:#3cc3e2;
+    --accent-deep:#2f96b0;
+    --accent-text:#8fd3e4;
+    --accent-link:#7fd4e6;
+    --ink:#e3eef1;
+    --ink-strong:#f3fafc;
+    --muted:#a4b8bd;
+    --muted-2:#8399a0;
+    --bg:#0b1a1e;
+    --surface:#122a30;
+    --surface-2:#153238;
+    --line:#22414a;
+    --line-2:#2a4c56;
+    --tint:#1b4652;
+    --tint-2:#163a43;
+    --tint-3:#14333b;
+    --ok-bg:#12352a;
+    --ok-text:#8fdcb2;
+    --logo-bg:#2db3d2;
+    --logo-ink:#0b1a1e;
+    --shadow:0 0 22px rgba(0,0,0,.35);
+    --shadow-lift:0 14px 36px rgba(0,0,0,.45);
+    --glow:rgba(45,179,210,.28);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#3cc3e2;
+  --accent-deep:#2f96b0;
+  --accent-text:#8fd3e4;
+  --accent-link:#7fd4e6;
+  --ink:#e3eef1;
+  --ink-strong:#f3fafc;
+  --muted:#a4b8bd;
+  --muted-2:#8399a0;
+  --bg:#0b1a1e;
+  --surface:#122a30;
+  --surface-2:#153238;
+  --line:#22414a;
+  --line-2:#2a4c56;
+  --tint:#1b4652;
+  --tint-2:#163a43;
+  --tint-3:#14333b;
+  --ok-bg:#12352a;
+  --ok-text:#8fdcb2;
+  --logo-bg:#2db3d2;
+  --logo-ink:#0b1a1e;
+  --shadow:0 0 22px rgba(0,0,0,.35);
+  --shadow-lift:0 14px 36px rgba(0,0,0,.45);
+  --glow:rgba(45,179,210,.28);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html[data-font="big"]{font-size:112.5%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  font-size:.9375rem;line-height:1.65;-webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+a{color:var(--accent-link);text-decoration:none}
+a:hover{color:var(--accent-text);text-decoration:underline}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+img,svg{max-width:100%}
+h1,h2,h3{margin:0;color:var(--ink-strong);text-wrap:balance;letter-spacing:-.015em}
+h1{font-size:clamp(1.9rem,1.2rem + 2.6vw,3rem);line-height:1.12;font-weight:600}
+h2{font-size:clamp(1.4rem,1.1rem + 1.2vw,1.9rem);line-height:1.2;font-weight:600}
+h3{font-size:1.05rem;line-height:1.35;font-weight:600}
+p{margin:0}
+.wrap{width:100%;max-width:var(--max);margin:0 auto;padding-inline:28px}
+@media (max-width:640px){.wrap{padding-inline:16px}}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-link)}
+.eyebrow::before{content:"";width:18px;height:2px;background:var(--accent);border-radius:2px}
+.lead{font-size:1.05rem;color:var(--muted);max-width:62ch}
+.section{padding-block:72px}
+@media (max-width:640px){.section{padding-block:52px}}
+.section-head{display:flex;flex-direction:column;gap:12px;max-width:70ch;margin-bottom:36px}
+.section-head p{color:var(--muted)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 30px;border:0;border-radius:var(--pill);font-size:.92rem;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,background .16s ease}
+.btn:hover{text-decoration:none}
+.btn-primary{background:var(--grad);color:var(--on-grad);box-shadow:0 8px 24px var(--glow)}
+.btn-primary:hover{filter:brightness(1.07);transform:translateY(-1px);color:var(--on-grad)}
+.btn-soft{background:var(--tint);color:var(--accent-text)}
+.btn-soft:hover{background:var(--tint-2);color:var(--accent-text)}
+.btn-ghost{background:transparent;color:var(--ink-strong);border:1px solid var(--line-2)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--ink-strong)}
+.btn svg{width:18px;height:18px;flex:0 0 18px}
+
+/* Header */
+.site-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.site-header .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+.brand:hover{text-decoration:none}
+.brand-mark{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 32px;border-radius:9px;background:var(--logo-bg)}
+.brand-mark span{display:block;width:11px;height:14px;border:1.5px solid var(--logo-ink);border-radius:1.5px}
+.brand-name{display:flex;align-items:baseline;gap:9px;line-height:1;white-space:nowrap}
+.brand-name b{font-size:16px;font-weight:600;letter-spacing:-.015em;color:var(--ink-strong)}
+.brand-name small{font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2)}
+.nav{display:flex;align-items:center;gap:4px 22px;flex-wrap:wrap}
+.nav a{font-size:.85rem;font-weight:500;color:var(--muted);padding:6px 0}
+.nav a:hover{color:var(--ink-strong);text-decoration:none}
+.tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tool{display:flex;align-items:center;gap:7px;height:32px;padding:0 11px;background:transparent;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--muted)}
+.tool:hover{color:var(--ink-strong);border-color:var(--accent-deep)}
+.tool[aria-pressed="true"]{background:var(--tint-2);color:var(--ink-strong);border-color:var(--accent-deep)}
+.tool .dot{display:block;width:13px;height:13px;border-radius:50%;border:1.5px solid currentColor;background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
+.fontsize{display:flex;align-items:center;height:32px;padding:0 2px;border:1px solid var(--line);border-radius:8px}
+.fontsize button{min-width:26px;height:26px;background:transparent;border:0;border-radius:6px;cursor:pointer;font-weight:600;color:var(--muted)}
+.fontsize button:hover,.fontsize button[aria-pressed="true"]{background:var(--tint-2);color:var(--ink-strong)}
+.fontsize .small{font-size:12px}.fontsize .big{font-size:16px}
+@media (max-width:900px){.nav{display:none}}
+
+/* Hero */
+.hero{position:relative;overflow:hidden;padding-block:64px 72px}
+.hero .aura{position:absolute;left:62%;top:40%;transform:translate(-50%,-50%);width:min(900px,120vw);height:560px;pointer-events:none;background:radial-gradient(closest-side,rgba(45,179,210,.18),rgba(45,179,210,.05) 55%,transparent 75%);filter:blur(6px)}
+.hero .wrap{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:48px 56px;align-items:center}
+.hero-copy{display:flex;flex-direction:column;gap:22px}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px}
+.trust{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:10px;padding-top:22px;border-top:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+.trust span{display:inline-flex;align-items:center;gap:8px}
+.trust svg{width:16px;height:16px;color:var(--accent)}
+@media (max-width:900px){
+  .hero{padding-block:44px 56px}
+  .hero .wrap{grid-template-columns:1fr}
+  .hero .aura{left:50%;top:70%}
+}
+
+/* Assistant demo card */
+.demo{position:relative;background:var(--surface);border-radius:22px;box-shadow:var(--shadow-lift);padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px}
+.demo-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px 12px;border-bottom:1px solid var(--line)}
+.demo-top .who{display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:600;color:var(--ink-strong)}
+.avatar{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--grad);color:#fff;flex:0 0 34px}
+.avatar svg{width:18px;height:18px}
+.demo-top .tag{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);padding:5px 10px;border:1px solid var(--line);border-radius:var(--pill)}
+.chat{display:flex;flex-direction:column;gap:10px;padding:2px 4px}
+.msg{max-width:86%;padding:11px 15px;border-radius:18px;font-size:.86rem;line-height:1.55}
+.msg.bot{align-self:flex-start;background:var(--tint-2);color:var(--ink);border-bottom-left-radius:6px}
+.msg.user{align-self:flex-end;background:var(--grad);color:#fff;border-bottom-right-radius:6px}
+.msg .saved{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.76rem;font-weight:600;color:var(--ok-text)}
+.msg .saved svg{width:14px;height:14px}
+.running{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 4px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--line);border-radius:14px}
+.running .lbl{font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2)}
+.running .sum{font-size:1.15rem;font-weight:700;color:var(--ink-strong);font-variant-numeric:tabular-nums}
+.running .sub{font-size:.76rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 4px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:var(--surface-2);color:var(--accent-text);border:1px solid var(--line);border-radius:var(--pill);font-size:12.5px;font-weight:500;cursor:default;white-space:nowrap}
+.chip span{color:var(--accent-deep);font-size:12px}
+.input-row{display:flex;align-items:center;gap:10px;margin:0 4px;padding:6px 6px 6px 16px;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--pill)}
+.input-row .ph{flex:1;font-size:.86rem;color:var(--muted-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.send{display:flex;align-items:center;justify-content:center;width:40px;height:40px;flex:0 0 40px;border:0;border-radius:50%;background:var(--grad);color:#fff;box-shadow:0 6px 18px var(--glow)}
+.send svg{width:18px;height:18px;margin-left:1px}
+.demo-note{text-align:center;font-size:11.5px;color:var(--muted-2)}
+
+/* Declaration grid */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+@media (max-width:980px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}}
+.decl{position:relative;display:flex;flex-direction:column;gap:14px;padding:24px 24px 20px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.decl:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--accent-deep)}
+.decl:focus-within{border-color:var(--accent)}
+.decl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.icon{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--tint-2);color:var(--accent-deep)}
+.icon svg{width:26px;height:26px}
+.sym{font-size:.74rem;font-weight:600;letter-spacing:.06em;color:var(--accent-text);background:var(--tint);padding:5px 10px;border-radius:var(--pill);white-space:nowrap}
+.decl h3 a{color:inherit;text-decoration:none}
+.decl h3 a::after{content:"";position:absolute;inset:0;border-radius:var(--radius)}
+.decl .for{font-size:.86rem;color:var(--muted)}
+.decl .for b{font-weight:600;color:var(--ink)}
+.decl-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:14px;border-top:1px solid var(--line);font-size:.84rem}
+.decl-foot .go{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--accent-link)}
+.decl-foot .go svg{width:16px;height:16px;transition:transform .18s ease}
+.decl:hover .go svg{transform:translateX(3px)}
+.decl-foot .more{position:relative;z-index:1;color:var(--muted)}
+.decl .badge{position:absolute;top:-11px;left:24px;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--grad);padding:4px 10px;border-radius:var(--pill)}
+.decl.ask{background:var(--grad);border-color:transparent;color:#fff;justify-content:space-between}
+.decl.ask h3,.decl.ask .for,.decl.ask .for b{color:#fff}
+.decl.ask .for{opacity:.92}
+.decl.ask .icon{background:rgba(255,255,255,.2);color:#fff}
+.decl.ask .decl-foot{border-top-color:rgba(255,255,255,.3)}
+.decl.ask .go{color:#fff}
+.decl.ask .sym{background:rgba(255,255,255,.22);color:#fff}
+.decl.ask:hover{border-color:transparent}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;counter-reset:step}
+@media (max-width:900px){.steps{grid-template-columns:1fr}}
+.step{position:relative;display:flex;flex-direction:column;gap:12px;padding:26px 24px 24px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow)}
+.step .num{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--grad);color:#fff;font-weight:700;font-size:.95rem;box-shadow:0 6px 16px var(--glow)}
+.step p{color:var(--muted);font-size:.9rem}
+.step .alt{display:inline-flex;align-items:center;gap:8px;margin-top:4px;padding:9px 13px;background:var(--tint-3);border:1px dashed var(--line-2);border-radius:12px;font-size:.8rem;color:var(--accent-text)}
+.note{display:flex;gap:12px;align-items:flex-start;margin-top:22px;padding:16px 18px;background:var(--ok-bg);color:var(--ok-text);border-radius:var(--radius);font-size:.86rem;line-height:1.6}
+.note svg{width:20px;height:20px;flex:0 0 20px;margin-top:2px}
+
+/* Outcome band */
+.band{background:var(--grad);color:#fff}
+.band .section-head{margin-bottom:34px}
+.band h2,.band .section-head p,.band .eyebrow{color:#fff}
+.band .eyebrow::before{background:#fff}
+.band .section-head p{opacity:.92}
+.outcomes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+@media (max-width:980px){.outcomes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.outcomes{grid-template-columns:1fr}}
+.out{display:flex;flex-direction:column;gap:10px;padding:22px 20px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:var(--radius)}
+.out .oi{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.18)}
+.out .oi svg{width:24px;height:24px}
+.out h3{color:#fff;font-size:1rem}
+.out p{font-size:.85rem;opacity:.92}
+
+/* Two-col why + terms */
+.why{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:start}
+@media (max-width:900px){.why{grid-template-columns:1fr}}
+.panel{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:30px 28px}
+@media (max-width:640px){.panel{padding:24px 18px}}
+.checks{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:14px}
+.checks li{display:flex;gap:12px;align-items:flex-start;font-size:.92rem}
+.checks svg{width:22px;height:22px;flex:0 0 22px;color:var(--accent);margin-top:1px}
+.checks b{font-weight:600;color:var(--ink-strong)}
+.checks span{color:var(--muted)}
+.terms{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column}
+.terms li{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline;padding:12px 0;border-top:1px solid var(--line);font-size:.88rem}
+.terms li:first-child{border-top:0;padding-top:0}
+.terms time{font-weight:700;color:var(--ink-strong);font-variant-numeric:tabular-nums;white-space:nowrap;min-width:7.5ch}
+.terms span{color:var(--muted)}
+.terms b{font-weight:600;color:var(--ink)}
+.panel .fine{margin-top:16px;font-size:.78rem;color:var(--muted-2)}
+
+/* FAQ */
+.faq{display:flex;flex-direction:column;gap:10px;max-width:840px}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.faq details[open]{border-color:var(--accent-deep)}
+.faq summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;font-weight:600;color:var(--ink-strong)}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .plus{display:flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;border-radius:50%;background:var(--tint-2);color:var(--accent-text);transition:transform .18s ease}
+.faq summary .plus svg{width:14px;height:14px}
+.faq details[open] .plus{transform:rotate(45deg)}
+.faq .ans{padding:0 20px 18px;color:var(--muted);font-size:.9rem;max-width:68ch}
+
+/* Guides */
+.guides{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+@media (max-width:900px){.guides{grid-template-columns:1fr}}
+.guide{display:flex;flex-direction:column;gap:10px;padding:22px 22px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);color:inherit;text-decoration:none;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.guide:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--accent-deep);text-decoration:none;color:inherit}
+.guide .kind{font-size:.7rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2)}
+.guide p{font-size:.86rem;color:var(--muted)}
+.guide .go{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-size:.84rem;font-weight:600;color:var(--accent-link)}
+.guide .go svg{width:16px;height:16px}
+
+/* Final CTA */
+.cta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px 32px;padding:34px 36px;background:var(--surface);border-radius:22px;box-shadow:var(--shadow);border:1px solid var(--line)}
+@media (max-width:640px){.cta{padding:26px 18px}}
+.cta h2{font-size:1.35rem}
+.cta p{color:var(--muted);margin-top:6px}
+
+/* Footer */
+.site-footer{margin-top:70px;background:var(--grad);color:#fff}
+.site-footer .wrap{display:flex;flex-direction:column;gap:26px;padding-block:46px 36px}
+.foot-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.foot-brand{display:flex;align-items:center;gap:11px;font-size:15px;font-weight:700}
+.foot-brand span{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2)}
+.foot-brand span i{display:block;width:14px;height:17px;border:2px solid #fff;border-radius:2px}
+.foot-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:22px 40px;padding-top:24px;border-top:1px solid rgba(255,255,255,.25)}
+@media (max-width:900px){.foot-cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.foot-cols{grid-template-columns:1fr}}
+.foot-cols h4{margin:0 0 8px;font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.foot-cols ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.site-footer a{color:#fff;font-size:13px;line-height:1.6}
+.foot-meta{display:flex;flex-direction:column;gap:6px;font-size:12.5px;line-height:1.6;opacity:.92}
+@media (min-width:901px){.foot-meta{text-align:right;align-items:flex-end}}
+.foot-bottom{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.25);font-size:12px;opacity:.85}
+</style>
+
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Deklaracje gminne, strona główna">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span class="brand-name"><b>Deklaracje</b><small>gminne</small></span>
+    </a>
+    <nav class="nav" aria-label="Główna">
+      <a href="#deklaracje">Deklaracje</a>
+      <a href="#jak-to-dziala">Jak to działa</a>
+      <a href="#terminy">Terminy</a>
+      <a href="#pytania">Pytania</a>
+      <a href="#poradniki">Poradniki</a>
+    </nav>
+    <div class="tools">
+      <button type="button" class="tool" id="contrast-toggle" aria-pressed="false" title="Tryb wysokiego kontrastu"><span class="dot" aria-hidden="true"></span>Kontrast</button>
+      <div class="fontsize" role="group" aria-label="Wielkość czcionki">
+        <button type="button" class="small" id="font-normal" aria-pressed="true" aria-label="Normalna wielkość czcionki">A</button>
+        <button type="button" class="big" id="font-big" aria-pressed="false" aria-label="Powiększ czcionkę">A</button>
+      </div>
+      <button type="button" class="tool" id="lang" aria-label="Język: polski">PL</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero" aria-labelledby="hero-title">
+    <span class="aura" aria-hidden="true"></span>
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow">Podatki i opłaty lokalne online</span>
+        <h1 id="hero-title">Deklaracja podatkowa w kilka minut, bez wizyty w urzędzie</h1>
+        <p class="lead">Wybierz podatek, a resztę zrobimy razem. Możesz opowiedzieć asystentowi zwykłym językiem, co posiadasz, albo wypełnić formularz krok po kroku. System sam dobierze stawki Twojej gminy, policzy kwotę i przygotuje komplet dokumentów.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#deklaracje">Wybierz deklarację
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#jak-to-dziala">Zobacz, jak to działa</a>
+        </div>
+        <div class="trust" aria-label="Najważniejsze cechy usługi">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Bez zakładania konta</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Bezpłatnie</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Stawki i terminy Twojej gminy</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Zapis roboczy w każdej chwili</span>
+        </div>
+      </div>
+
+      <aside class="demo" aria-label="Przykładowa rozmowa z asystentem">
+        <div class="demo-top">
+          <span class="who">
+            <span class="avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/><path d="M9 12h.01M13 12h.01"/></svg></span>
+            Asystent · DN-1 Podatek od nieruchomości
+          </span>
+          <span class="tag">Przykład</span>
+        </div>
+        <div class="chat">
+          <div class="msg bot">Dzień dobry! Co chcesz zgłosić w tej deklaracji? Możesz napisać własnymi słowami.</div>
+          <div class="msg user">Kupiłem w marcu mieszkanie 54 m² na Lipowej 12, do tego garaż 18 m² w tym samym budynku.</div>
+          <div class="msg bot">Rozumiem. Zapisałem dwa przedmioty opodatkowania: <b>mieszkanie 54 m²</b> i <b>garaż 18 m²</b>, obowiązek od kwietnia. Adres uzupełniłem w sekcji B. Czy mieszkanie służy działalności gospodarczej?
+            <span class="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Zapisano w sekcji D</span>
+          </div>
+        </div>
+        <div class="running">
+          <div>
+            <div class="lbl">Podatek na bieżąco</div>
+            <div class="sub">9 miesięcy · stawki 2026 · zaokrąglone do 1 zł</div>
+          </div>
+          <div class="sum">126,00 zł</div>
+        </div>
+        <div class="chips" aria-hidden="true">
+          <span class="chip">Nie, tylko mieszkam <span>›</span></span>
+          <span class="chip">Mam jeszcze działkę <span>›</span></span>
+          <span class="chip">Pokaż formularz <span>›</span></span>
+        </div>
+        <div class="input-row" aria-hidden="true">
+          <span class="ph">Napisz odpowiedź…</span>
+          <span class="send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 4.2a1 1 0 0 1 1.06-.13l15.2 7.05a1 1 0 0 1 0 1.81L4.66 20a1 1 0 0 1-1.4-1.16l1.5-5.28a1 1 0 0 1 .84-.72l7.3-.84-7.3-.84a1 1 0 0 1-.84-.72l-1.5-5.28a1 1 0 0 1 .34-.96Z"/></svg></span>
+        </div>
+        <p class="demo-note">Kwota przykładowa. Asystent nie wysyła deklaracji — przygotowuje dane, które zatwierdzasz w formularzu.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section" id="deklaracje" aria-labelledby="decl-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Krok 1</span>
+        <h2 id="decl-title">Wybierz deklarację, którą chcesz złożyć</h2>
+        <p>Każda karta prowadzi do jednego formularza. Jeśli nie wiesz, który podatek Cię dotyczy, opisz swoją sytuację asystentowi, a wskaże właściwą deklarację.</p>
+      </div>
+
+      <div class="grid">
+        <article class="decl">
+          <span class="badge">Najczęściej składana</span>
+          <div class="decl-head">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
+            <span class="sym">DN-1 · IN-1</span>
+          </div>
+          <h3><a href="./formularz/dn-1">Podatek od nieruchomości</a></h3>
+          <p class="for"><b>Dla kogo:</b> właściciele mieszkań, domów, garaży, działek i lokali firmowych. Także po zakupie, sprzedaży lub zmianie sposobu użytkowania.</p>
+          <div class="decl-foot">
+            <span class="go">Wypełnij <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <a class="more" href="./poradniki/podatek-od-nieruchomosci">Przeczytaj o podatku</a>
+          </div>
+        </article>
+
+        <article class="decl">
+          <div class="decl-head">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M12 13c-3 0-5-2-5-5 3 0 5 2 5 5Z"/><path d="M12 13c3 0 5-2 5-5-3 0-5 2-5 5Z"/><path d="M12 18c-3 0-5-2-5-5 3 0 5 2 5 5Z"/><path d="M12 18c3 0 5-2 5-5-3 0-5 2-5 5Z"/><path d="M12 9c0-3-2-5-2-5s-2 2-2 5"/></svg></span>
+            <span class="sym">DR-1 · IR-1</span>
+          </div>
+          <h3><a href="./formularz/dr-1">Podatek rolny</a></h3>
+          <p class="for"><b>Dla kogo:</b> właściciele i posiadacze gruntów rolnych, w tym gospodarstw powyżej 1 ha przeliczeniowego. System sam przeliczy hektary według klas gleby.</p>
+          <div class="decl-foot">
+            <span class="go">Wypełnij <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <a class="more" href="./poradniki/podatek-rolny">Przeczytaj o podatku</a>
+          </div>
+        </article>
+
+        <article class="decl">
+          <div class="decl-head">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 7 10h3l-4 6h5v4h2v-4h5l-4-6h3L12 3Z"/></svg></span>
+            <span class="sym">DL-1 · IL-1</span>
+          </div>
+          <h3><a href="./formularz/dl-1">Podatek leśny</a></h3>
+          <p class="for"><b>Dla kogo:</b> właściciele lasów oraz gruntów oznaczonych w ewidencji jako leśne. Kwota zależy od powierzchni i ceny drewna ogłaszanej przez GUS.</p>
+          <div class="decl-foot">
+            <span class="go">Wypełnij <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <a class="more" href="./poradniki/podatek-lesny">Przeczytaj o podatku</a>
+          </div>
+        </article>
+
+        <article class="decl">
+          <div class="decl-head">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span>
+            <span class="sym">DT-1</span>
+          </div>
+          <h3><a href="./formularz/dt-1">Podatek od środków transportowych</a></h3>
+          <p class="for"><b>Dla kogo:</b> właściciele samochodów ciężarowych powyżej 3,5 t, ciągników siodłowych, przyczep, naczep i autobusów. Dodasz pojazd, podając dane z dowodu rejestracyjnego.</p>
+          <div class="decl-foot">
+            <span class="go">Wypełnij <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <a class="more" href="./poradniki/podatek-od-srodkow-transportowych">Przeczytaj o podatku</a>
+          </div>
+        </article>
+
+        <article class="decl">
+          <div class="decl-head">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg></span>
+            <span class="sym">DO-1</span>
+          </div>
+          <h3><a href="./formularz/do-1">Opłata za gospodarowanie odpadami komunalnymi</a></h3>
+          <p class="for"><b>Dla kogo:</b> właściciele i zarządcy nieruchomości, w których powstają odpady. Nowa deklaracja także przy zmianie liczby mieszkańców lub sposobu zbierania odpadów.</p>
+          <div class="decl-foot">
+            <span class="go">Wypełnij <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            <a class="more" href="./poradniki/oplata-za-odpady">Przeczytaj o opłacie</a>
+          </div>
+        </article>
+
+        <article class="decl ask">
+          <div class="decl-head">
+            <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/><path d="M9.5 10.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.4"/><path d="M12 17h.01"/></svg></span>
+            <span class="sym">Asystent</span>
+          </div>
+          <h3><a href="./asystent">Nie wiesz, którą deklarację wybrać?</a></h3>
+          <p class="for">Opisz swoją sytuację, np. „odziedziczyłem dom z kawałkiem pola”. Asystent wskaże właściwe formularze i od razu zacznie je wypełniać.</p>
+          <div class="decl-foot">
+            <span class="go">Zapytaj asystenta <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="jak-to-dziala" aria-labelledby="how-title" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Jak to działa</span>
+        <h2 id="how-title">Trzy kroki od wyboru podatku do gotowej deklaracji</h2>
+        <p>Nie musisz znać numerów rubryk ani stawek. Prowadzimy Cię pytanie po pytaniu, a każdą odpowiedź od razu widzisz w formularzu.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <span class="num" aria-hidden="true">1</span>
+          <h3>Wybierz deklarację</h3>
+          <p>Kliknij kartę podatku, który Cię dotyczy. Wybierz gminę i rok podatkowy, a system wczyta obowiązujące w niej stawki i terminy.</p>
+        </div>
+        <div class="step">
+          <span class="num" aria-hidden="true">2</span>
+          <h3>Opowiedz asystentowi albo wypełnij formularz</h3>
+          <p>Napisz zwykłym językiem, co posiadasz i od kiedy. Asystent przełoży to na pola deklaracji i dopyta o brakujące dane. Kwota podatku liczy się na bieżąco.</p>
+          <span class="alt"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Wolisz klasyczny formularz? Przełącz się w każdej chwili.</span>
+        </div>
+        <div class="step">
+          <span class="num" aria-hidden="true">3</span>
+          <h3>Sprawdź, podpisz i złóż</h3>
+          <p>Zobaczysz podsumowanie z wyliczoną kwotą i ratami. Podpisz deklarację Profilem Zaufanym i wyślij online albo pobierz PDF i złóż w urzędzie.</p>
+        </div>
+      </div>
+      <div class="note" role="note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        <span>Asystent nie wysyła deklaracji sam. Przygotowuje dane, które widzisz, poprawiasz i zatwierdzasz w formularzu. Ostatnie słowo zawsze należy do Ciebie.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="band section" aria-labelledby="out-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Efekt</span>
+        <h2 id="out-title">Co otrzymasz po wypełnieniu</h2>
+        <p>Komplet dokumentów gotowy do złożenia, bez ręcznego liczenia i szukania załączników.</p>
+      </div>
+      <div class="outcomes">
+        <div class="out">
+          <span class="oi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/></svg></span>
+          <h3>Deklaracja z załącznikami</h3>
+          <p>Główny formularz oraz wymagane załączniki, np. ZDN-1 i ZDN-2, wypełnione na podstawie tych samych danych.</p>
+        </div>
+        <div class="out">
+          <span class="oi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h3M13 11h3M8 15h3M13 15h3"/></svg></span>
+          <h3>Wyliczona kwota i raty</h3>
+          <p>Podatek policzony proporcjonalnie do miesięcy, zaokrąglony zgodnie z przepisami, rozbity na raty z terminami płatności.</p>
+        </div>
+        <div class="out">
+          <span class="oi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg></span>
+          <h3>Wysyłka online lub PDF</h3>
+          <p>Podpis Profilem Zaufanym i wysyłka do urzędu bez wychodzenia z domu albo PDF do wydruku i złożenia osobiście.</p>
+        </div>
+        <div class="out">
+          <span class="oi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5"/><path d="M18 3v4h-4"/><path d="M20 12a8 8 0 0 1-14 5"/><path d="M6 21v-4h4"/></svg></span>
+          <h3>Wersja do poprawek</h3>
+          <p>Zapis roboczy bez logowania. Wrócisz do deklaracji później, a w przyszłym roku wykorzystasz ją jako podstawę korekty.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="terminy" aria-labelledby="why-title">
+    <div class="wrap why">
+      <div class="panel">
+        <span class="eyebrow">Dlaczego warto</span>
+        <h2 id="why-title" style="margin-top:12px">Zrobione po ludzku, policzone jak w urzędzie</h2>
+        <ul class="checks">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><div><b>Prosty język, zero rubryk.</b> <span>Pytamy o mieszkanie i garaż, nie o „przedmiot opodatkowania w poz. 45”.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><div><b>Stawki Twojej gminy.</b> <span>Kwoty liczymy z uchwały rady gminy na wybrany rok, nie z ogólnych tabel.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><div><b>Kontrola błędów w locie.</b> <span>Sprawdzamy NIP i PESEL sumą kontrolną, daty i brakujące załączniki, zanim cokolwiek wyślesz.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><div><b>Dostępność dla każdego.</b> <span>Tryb wysokiego kontrastu, większa czcionka, obsługa klawiaturą i czytnikami ekranu.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><div><b>Twoje dane zostają u Ciebie.</b> <span>Zapis roboczy trzymamy tylko w Twojej przeglądarce do momentu podpisania i wysyłki.</span></div></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <span class="eyebrow">Terminy</span>
+        <h2 style="margin-top:12px;font-size:1.3rem">Kiedy składasz i kiedy płacisz</h2>
+        <ul class="terms">
+          <li><time datetime="2026-01-31">31 stycznia</time><span><b>Deklaracja na rok podatkowy</b> dla firm i innych osób prawnych (DN-1, DR-1, DL-1).</span></li>
+          <li><time>14 dni</time><span><b>Informacja po zdarzeniu</b> dla osób fizycznych: od zakupu, sprzedaży lub zmiany sposobu użytkowania (IN-1, IR-1, IL-1).</span></li>
+          <li><time datetime="2026-02-15">15 lutego</time><span><b>Podatek od środków transportowych</b> (DT-1), a przy nowym pojeździe w 14 dni od rejestracji.</span></li>
+          <li><time>15 III · V · IX · XI</time><span><b>Raty podatku</b> od nieruchomości, rolnego i leśnego dla osób fizycznych. Do 100 zł płacisz jednorazowo.</span></li>
+        </ul>
+        <p class="fine">Terminy ogólne. Gmina może ustalić inne terminy opłaty za odpady, a system pokaże Ci je po wyborze gminy.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pytania" aria-labelledby="faq-title" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Najczęstsze pytania</span>
+        <h2 id="faq-title">Zanim zaczniesz</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Czy muszę zakładać konto?<span class="plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <p class="ans">Nie. Deklarację wypełniasz bez logowania. Zapis roboczy trzymamy w Twojej przeglądarce, a konto i podpis potrzebujesz dopiero przy wysyłce online przez Profil Zaufany.</p>
+        </details>
+        <details>
+          <summary>Skąd system zna stawki mojej gminy?<span class="plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <p class="ans">Po wyborze gminy i roku podatkowego wczytujemy stawki z uchwały jej rady oraz limity ustawowe na dany rok. Przy każdej pozycji widzisz zastosowaną stawkę, więc łatwo ją porównasz z uchwałą.</p>
+        </details>
+        <details>
+          <summary>Czy asystent wyśle deklarację za mnie?<span class="plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <p class="ans">Nie. Asystent zamienia Twoje odpowiedzi na dane w formularzu i podpowiada, czego brakuje. Podsumowanie sprawdzasz Ty, Ty składasz oświadczenie o zgodności danych i Ty podpisujesz.</p>
+        </details>
+        <details>
+          <summary>Co, jeśli się pomylę albo coś się zmieni?<span class="plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <p class="ans">Do momentu wysyłki zmieniasz wszystko bez ograniczeń. Po złożeniu wybierasz „Korekta deklaracji” w sekcji A, a system wczyta poprzednie dane i pozwoli poprawić tylko to, co się zmieniło.</p>
+        </details>
+        <details>
+          <summary>Mam mieszkanie i kawałek pola. Ile deklaracji składam?<span class="plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+          <p class="ans">Zależy od gruntów. Mieszkanie zgłaszasz w podatku od nieruchomości, a użytki rolne w podatku rolnym. Jeśli opiszesz sytuację asystentowi, wskaże właściwe formularze, a dane wspólne (adres, identyfikatory) wypełni raz w obu.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="poradniki" aria-labelledby="guides-title" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Poradniki</span>
+        <h2 id="guides-title">Krótko o podatkach lokalnych</h2>
+      </div>
+      <div class="guides">
+        <a class="guide" href="./poradniki/abc-podatkow-lokalnych">
+          <span class="kind">ABC podatków</span>
+          <h3>Kto płaci podatek od nieruchomości, a kto rolny</h3>
+          <p>Różnica między gruntem budowlanym, użytkiem rolnym i lasem w ewidencji, i co z tego wynika dla Twojej deklaracji.</p>
+          <span class="go">Czytaj <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="guide" href="./poradniki/terminy-2026">
+          <span class="kind">Terminy</span>
+          <h3>Kalendarz podatnika na 2026 rok</h3>
+          <p>Wszystkie daty w jednym miejscu: deklaracje, informacje po zdarzeniu, raty i konsekwencje spóźnienia.</p>
+          <span class="go">Czytaj <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="guide" href="./poradniki/korekta-deklaracji">
+          <span class="kind">Jak to działa</span>
+          <h3>Korekta deklaracji krok po kroku</h3>
+          <p>Kiedy składasz korektę, a kiedy nową deklarację, i jak zrobić to w systemie w kilka minut.</p>
+          <span class="go">Czytaj <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-label="Zacznij teraz" style="padding-top:0">
+    <div class="wrap">
+      <div class="cta">
+        <div>
+          <h2>Gotowy? Wybierz deklarację i zacznij</h2>
+          <p>Większość mieszkańców kończy w kilka minut. Zapis roboczy pozwoli wrócić, jeśli będziesz potrzebować dokumentu z szuflady.</p>
+        </div>
+        <div class="hero-actions" style="margin:0">
+          <a class="btn btn-primary" href="#deklaracje">Wybierz deklarację</a>
+          <a class="btn btn-soft" href="./asystent">Zapytaj asystenta</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="foot-top">
+      <span class="foot-brand"><span aria-hidden="true"><i></i></span>Deklaracje gminne</span>
+      <a href="./deklaracja-dostepnosci">Deklaracja dostępności</a>
+    </div>
+    <div class="foot-cols">
+      <div>
+        <h4>Deklaracje</h4>
+        <ul>
+          <li><a href="./formularz/dn-1">Podatek od nieruchomości</a></li>
+          <li><a href="./formularz/dr-1">Podatek rolny</a></li>
+          <li><a href="./formularz/dl-1">Podatek leśny</a></li>
+          <li><a href="./formularz/dt-1">Podatek od środków transportowych</a></li>
+          <li><a href="./formularz/do-1">Opłata za odpady komunalne</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Dla mieszkańca</h4>
+        <ul>
+          <li><a href="#jak-to-dziala">Jak to działa</a></li>
+          <li><a href="#terminy">Terminy</a></li>
+          <li><a href="#pytania">Najczęstsze pytania</a></li>
+          <li><a href="#poradniki">Poradniki</a></li>
+          <li><a href="./kontakt">Kontakt z urzędem</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Dokumenty</h4>
+        <ul>
+          <li><a href="./dokumenty/klauzula-informacyjna.pdf">Klauzula informacyjna (PDF)</a></li>
+          <li><a href="./dokumenty/regulamin.pdf">Regulamin serwisu (PDF)</a></li>
+          <li><a href="./dokumenty/deklaracja-dostepnosci.pdf">Deklaracja dostępności serwisu (PDF)</a></li>
+        </ul>
+      </div>
+      <div class="foot-meta">
+        <span>Aktualna wersja serwisu: 1.0.0</span>
+        <span>Publiczny formularz gminny · dostępny bez zakładania konta</span>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>Serwis ma charakter informacyjny i pomocniczy. Wyliczenia nie stanowią decyzji podatkowej.</span>
+      <span>Podstawa prawna: ustawa o podatkach i opłatach lokalnych, ustawa o podatku rolnym, ustawa o podatku leśnym.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  var contrast=document.getElementById('contrast-toggle');
+  var fNormal=document.getElementById('font-normal');
+  var fBig=document.getElementById('font-big');
+  function read(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function write(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function isDark(){
+    var t=root.getAttribute('data-theme');
+    if(t) return t==='dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function syncContrast(){ contrast.setAttribute('aria-pressed', isDark()?'true':'false'); }
+  var savedTheme=read('dg-theme');
+  if(savedTheme==='dark'||savedTheme==='light') root.setAttribute('data-theme',savedTheme);
+  syncContrast();
+  contrast.addEventListener('click',function(){
+    var next=isDark()?'light':'dark';
+    root.setAttribute('data-theme',next); write('dg-theme',next); syncContrast();
+  });
+  function setFont(big){
+    if(big) root.setAttribute('data-font','big'); else root.removeAttribute('data-font');
+    fBig.setAttribute('aria-pressed',big?'true':'false');
+    fNormal.setAttribute('aria-pressed',big?'false':'true');
+    write('dg-font',big?'big':'normal');
+  }
+  if(read('dg-font')==='big') setFont(true);
+  fNormal.addEventListener('click',function(){setFont(false)});
+  fBig.addEventListener('click',function(){setFont(true)});
+})();
+</script>
+</body>
+</html>
