@@ -91,6 +91,34 @@ for (const width of [1440, 390]) {
   const actionLabels = await page.locator('tbody td:last-child .btn').allInnerTexts();
   check('akcje w ostatniej kolumnie', actionLabels.length === 15 && actionLabels.every(t => /Test z klientem|Przypomnij|Wyślij ankietę|Otwórz|Rozbieżności|Przed startem|Wyślij ponownie|Wyślij poprawioną|Uruchom test/.test(t)));
 
+
+  // kreator „Ustalenie” zamiast prostego dialogu wysyłki
+  await page.evaluate(() => localStorage.clear()); await page.reload(); await page.waitForSelector('tbody tr');
+  await page.click('tr:has-text("Lubawa") [data-act="send"]'); await page.waitForTimeout(200);
+  check('„Wyślij ankietę” otwiera kreator ustalenia', page.url().includes('#ustalenie/') && /Ustalenie zasad/.test(await page.locator('h1').innerText()));
+  check('kreator ma dwa tryby (poprzednie zasady / pusta ankieta)', await page.locator('input[name=mode]').count() === 2);
+  check('nowy klient: tryb „poprzednie zasady” niedostępny', await page.locator('input[value=confirm_previous]').isDisabled() && await page.locator('input[value=new_survey]').isChecked());
+  await page.goto(url + '#ustalenie/2101'); await page.waitForTimeout(200);
+  check('stały klient: tryb „poprzednie zasady” domyślny, z tabelą zasad', await page.locator('input[value=confirm_previous]').isChecked() && await page.locator('.panel.inner table.answers tr').count() === 20);
+  await page.click('[data-act="wiz-edit"]'); await page.waitForTimeout(150);
+  check('edycja zasad przed wysyłką: formularz z polami', await page.locator('[data-form="wiz-edit"] .field').count() >= 20);
+  await page.fill('#w-max_votes_total', '7'); await page.click('[data-form="wiz-edit"] button[type=submit]'); await page.waitForTimeout(150);
+  check('zmiana opiekuna oznaczona w tabeli', await page.locator('.panel.inner tr.changed').count() >= 1);
+  await page.click('[data-act="wiz-next"]'); await page.waitForTimeout(150);
+  check('krok 2: pole e-mail i ważność linku', await page.locator('#wiz-email').count() === 1 && await page.locator('#wiz-expires').count() === 1);
+  await page.fill('#wiz-email', 'bo@srem.pl'); await page.click('[data-form="wiz"] button[type=submit]'); await page.waitForTimeout(250);
+  check('po wysyłce: karta klienta, status Wysłana, zasady wysłane do potwierdzenia', page.url().includes('#klient/2101') && /Wysłana/.test(await page.locator('.pagehead .badge').first().innerText()) && /Zasady wysłane do potwierdzenia/.test(await page.locator('[role=tabpanel] h2').first().innerText()));
+  // widok klienta (potwierdzenie po stronie gminy)
+  await page.goto(url + '#klient/2101/podglad'); await page.waitForTimeout(200);
+  check('widok klienta: „Potwierdź zasady głosowania”, tabela, „Chcę wprowadzić zmiany”', /Potwierdź zasady/.test(await page.locator('.pubintro h1').innerText()) && await page.locator('table.answers tr').count() === 20 && await page.locator('[data-act="pub-edit"]').count() === 1);
+  check('widok klienta: formularz osoby potwierdzającej z oświadczeniem', await page.locator('[data-form="pub-confirm"] input[required]').count() === 5);
+  await page.fill('#pc-first', 'Marta'); await page.fill('#pc-last', 'Wiśniewska'); await page.fill('#pc-pos', 'Koordynatorka BO'); await page.fill('#pc-email', 'bo@srem.pl'); await page.check('[name=consent]');
+  await page.click('[data-form="pub-confirm"] button[type=submit]'); await page.waitForTimeout(250);
+  check('po potwierdzeniu: „Dziękujemy za potwierdzenie” i zablokowane zasady v1', /Dziękujemy/.test(await page.locator('.pubintro h1').innerText()) && /v1/.test(await page.locator('.public h2').first().innerText()));
+  await page.goto(url + '#klient/2101/Klient'); await page.waitForTimeout(200);
+  check('karta klienta po potwierdzeniu: odpowiedzi kanoniczne i zmiany względem 2025', /Odpowiedzi klienta/.test(await page.locator('[role=tabpanel] h2').first().innerText()) && await page.locator('table.diffs').count() === 1);
+  await page.evaluate(() => localStorage.clear());
+
   check('brak błędów w konsoli po interakcjach', errors.length === 0, errors.join(' | '));
   await page.close();
 }

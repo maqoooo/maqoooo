@@ -171,6 +171,39 @@ table.diffs ins{background:var(--ok-bg);color:var(--ok);text-decoration:none;pad
 .field .hint{font-size:.8125rem;color:var(--muted)}
 .dropzone{border:2px dashed var(--line-strong);border-radius:var(--radius);padding:24px;text-align:center;color:var(--muted)}
 
+/* ---------- kreator, formularze, widok klienta ---------- */
+.stepper{list-style:none;display:flex;gap:8px;margin:0 0 20px;padding:0;flex-wrap:wrap}
+.stepper li{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--pill);background:var(--bg);color:var(--muted);font-size:.8125rem;font-weight:500}
+.stepper li span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--line);font-size:.6875rem;font-weight:600;color:var(--ink)}
+.stepper li.active{background:var(--tint);color:var(--accent-text)}
+.stepper li.active span{background:var(--primary);color:#fff}
+.choices{border:0;padding:0;margin:0 0 20px;display:grid;gap:12px}
+.choices legend{font-weight:600;color:var(--ink-strong);margin-bottom:8px}
+.choice{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--radius);cursor:pointer;background:var(--surface)}
+.choice:has(input:checked){border-color:var(--primary);background:var(--tint)}
+.choice:has(input:focus-visible){box-shadow:var(--focus)}
+.choice.disabled{opacity:.6;cursor:not-allowed}
+.choice input{margin-top:3px;width:18px;height:18px;min-height:auto;accent-color:var(--primary);flex-shrink:0}
+.choice p{margin:2px 0 0;font-size:.875rem;color:var(--muted)}
+.panel.inner{box-shadow:none;margin:0 0 16px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 20px}
+.formgrid .full{grid-column:1/-1}
+.formgrid .field{margin-bottom:12px}
+.formgrid input,.formgrid select,.formgrid textarea{width:100%}
+.formactions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.consent{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1.5px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);margin-top:8px;cursor:pointer;font-size:.875rem}
+.consent input{margin-top:2px}
+.pubbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:-8px 0 20px;padding:10px 14px;border:1px dashed var(--line-strong);border-radius:var(--radius-sm);background:var(--warn-bg);color:var(--warn)}
+.pubbar .small{color:var(--warn)}
+.public{max-width:880px;margin-inline:auto}
+.pubhead{display:flex;align-items:center;gap:12px;padding:0 0 20px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.pubhead .mark{width:40px;height:40px;border-radius:10px;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:600;font-size:.8125rem}
+.pubhead strong{display:block;font-weight:600;color:var(--ink-strong)}
+.pubintro{margin-bottom:20px}
+.pubintro h1{font-size:clamp(1.5rem,1.2rem+1.2vw,2rem);margin-bottom:8px}
+.pubintro p{color:var(--muted);max-width:65ch}
+@media (max-width:760px){.formgrid{grid-template-columns:1fr}}
+
 /* ---------- dialog ---------- */
 dialog{border:0;border-radius:var(--radius);padding:0;max-width:600px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(0,0,0,.25);color:var(--ink)}
 dialog::backdrop{background:rgba(15,34,41,.5)}
@@ -213,7 +246,7 @@ dialog .dfoot{padding:14px 22px;border-top:1px solid var(--line);display:flex;ju
 /* ============================================================
    DANE (na sztywno — makieta)
    ============================================================ */
-const VERSION='testy-glosowan-v4';
+const VERSION='testy-glosowan-v5';
 const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const plural=(n,a,b,c)=>{n=Math.abs(n);if(n===1)return a;const m10=n%10,m100=n%100;return (m10>=2&&m10<=4&&!(m100>=12&&m100<=14))?b:c};
 
@@ -281,6 +314,56 @@ function fmtAnswer(k,ans){
     default:return typeof v==='boolean'?(v?'tak':'nie'):String(v);
   }
 }
+
+// ---- Edytor odpowiedzi kanonicznych (kreator + widok klienta) ----
+const OPT={
+  channel:{electronic:'tylko elektroniczne',electronic_paper:'elektroniczne i papierowe'},
+  allocation_method:{votes_per_project:'do N głosów na dowolne projekty',per_category:'1 głos w każdej kategorii',free_points:'dowolny podział punktów',budget_basket:'koszyk budżetowy'},
+  eligibility_check:{none:'bez bazy — oświadczenie mieszkańca',address_list:'bez bazy — po adresie (lista ulic)',residents_db:'baza mieszkańców (PESEL)'},
+  duplicate_policy:{first_valid:'pierwszy głos ważny, reszta nieważna',all_invalid:'wszystkie głosy nieważne'},
+  age_rule:{no_limit:'bez limitu wieku',min_age:'minimalny wiek',min_age_parent_consent:'minimalny wiek; młodsi za zgodą rodzica',no_limit_parent_consent:'bez limitu; niepełnoletni za zgodą rodzica'},
+  info_clause:{previous_year:'zostaje z poprzedniego roku',new:'nowa treść — dostarczy gmina'},
+  project_renumbering:{none:'bez zmian',status_then_number:'nowa — wg statusu, potem numeru',lottery:'nowa — losowanie',alphabetical:'nowa — alfabetycznie',submission_date:'nowa — wg daty złożenia'},
+  yesno:{true:'tak',false:'nie'},
+};
+// [klucz, typ, opcje?, wymagane?, podpowiedź?]
+const FIELD_TYPES={
+  date_start:['datetime'],date_end:['datetime'],channel:['select','channel'],allocation_method:['select','allocation_method'],
+  max_votes_total:['number',null,true],categories:['lines',null,true,'Każda kategoria w osobnym wierszu.'],voter_fields:['lines',null,true,'Każde pole w osobnym wierszu.'],
+  eligibility_check:['select','eligibility_check'],duplicate_policy:['select','duplicate_policy'],
+  sms_verification:['yesno'],sms_per_phone_limit:['number',null,false,'Limit głosów na jeden numer (gdy weryfikacja SMS włączona).'],
+  sms_unlimited_numbers:['lines',null,false,'Numery bez limitu SMS, po jednym w wierszu. Puste = nie dotyczy.'],ip_limit:['number',null,false,'Puste = brak deklaracji.'],
+  age_rule:['select','age_rule'],min_age:['number',null,false,'Wymagane, gdy obowiązuje minimalny wiek.'],pesel_hashed:['yesno'],info_clause:['select','info_clause'],
+  agreements:['lines',null,true,'Każde oświadczenie w osobnym wierszu.'],postal_code_on_card:['yesno'],project_renumbering:['select','project_renumbering'],
+  edition_year_label:['text',null,true],incomplete_categories_warning:['yesno'],
+};
+// Pola pomocnicze pokazujemy zaraz po polu głównym.
+const EDIT_ORDER=SURVEY.fields.flatMap(([k])=>k==='sms_verification'?['sms_verification','sms_per_phone_limit']:k==='age_rule'?['age_rule','min_age']:[k]);
+const EXTRA_LABEL={sms_per_phone_limit:'Limit głosów na numer telefonu',min_age:'Minimalny wiek (lata)'};
+function answersForm(vals,prefix='f'){
+  vals=vals||{};
+  return `<div class="formgrid">${EDIT_ORDER.map(k=>{
+    const [type,optKey,req,hint]=FIELD_TYPES[k];const id=prefix+'-'+k;const label=FIELD_LABEL[k]||EXTRA_LABEL[k];let v=vals[k];
+    let ctrl='';
+    if(type==='select'||type==='yesno'){const opts=type==='yesno'?OPT.yesno:OPT[optKey];ctrl=`<select id="${id}" name="${k}" required><option value="">— wybierz —</option>${Object.entries(opts).map(([ov,ol])=>`<option value="${ov}" ${String(v)===ov?'selected':''}>${E(ol)}</option>`).join('')}</select>`}
+    else if(type==='lines'){ctrl=`<textarea id="${id}" name="${k}" rows="3" ${req?'required':''}>${E(Array.isArray(v)?v.join('\n'):'')}</textarea>`}
+    else if(type==='number'){ctrl=`<input id="${id}" name="${k}" type="number" min="0" step="1" inputmode="numeric" value="${v===null||v===undefined?'':E(v)}" ${req?'required':''}>`}
+    else if(type==='datetime'){ctrl=`<input id="${id}" name="${k}" type="datetime-local" value="${E(v||'')}" required>`}
+    else{ctrl=`<input id="${id}" name="${k}" type="text" value="${E(v??'')}" ${req?'required':''}>`}
+    return `<div class="field ${type==='lines'?'full':''}"><label for="${id}">${E(label)}${req||type==='select'||type==='yesno'||type==='datetime'?'':' <span class="muted">(opcjonalnie)</span>'}</label>${ctrl}${hint?`<span class="hint">${E(hint)}</span>`:''}</div>`}).join('')}</div>`;
+}
+function answersFromForm(form){
+  const fd=new FormData(form);const out={};
+  EDIT_ORDER.forEach(k=>{const [type]=FIELD_TYPES[k];let v=fd.get(k);
+    if(type==='lines')v=(v||'').split('\n').map(x=>x.trim()).filter(Boolean);
+    else if(type==='number')v=v===''||v===null?null:Number(v);
+    else if(type==='yesno')v=v==='true';
+    else if(v==='')v=null;
+    out[k]=v});
+  return out;
+}
+function orgNameOf(a){return /^(Urząd Miasta|Miasto) /.test(a.client)?a.client.replace(/^Miasto /,'Urząd Miasta '):'Urząd Gminy '+a.client}
+
 // Które pola różnią się między dwoma zestawami odpowiedzi (porównanie po tekście, żeby uwzględnić pola zależne).
 // Daty i rok edycji zmieniają się co roku z definicji — nie liczymy ich jako „zmian klienta”.
 const EDITION_BOUND=['date_start','date_end','edition_year_label'];
@@ -376,7 +459,7 @@ function seed(){
     if(voterBaseUpdatedAt)events.unshift({text:'Zaktualizowano bazę uprawnionych ('+voterCount.toLocaleString('pl-PL')+' osób)',by:'system',at:fmtDate(voterBaseUpdatedAt)+', '+fmtTime(voterBaseUpdatedAt)});
     return {id:2101+i,client,start,end,verification,survey,test,owner,edition:'2026',contract:'UM/'+client.replace(/^(Urząd Miasta|Miasto) /,'').slice(0,3).toUpperCase()+'/2026',platformUrl:'https://budzet-obywatelski.'+client.toLowerCase().replace(/^(urząd miasta|miasto) /,'').replace(/[^a-ząćęłńóśźż]/g,'')+'.pl',expires:'2026-10-03',
       projectsSelected:projectStatusCounts.selected,publicationState,projectStatusCounts,voterCount,voterBaseUpdatedAt,
-      returning,answers,previousAnswers,answersVersion:survey==='confirmed'?1:0,clientNote:survey==='confirmed'&&i%2===1?'Wyniki chcemy publikować dopiero po weryfikacji, nie na bieżąco. Lista ulic – prześlemy do 12.09.':'',platform,resolution:i%3===0?{file:'Uchwała nr XXI/'+(120+i)+'/2026.pdf',fields:{max_votes_total:{value:3,quote:'Każdy mieszkaniec może oddać maksymalnie trzy głosy.'},date_start:{value:start,quote:'Głosowanie rozpoczyna się '+fmtDate(start)+'.'}}}:null,evidence,checks,events,notes:i===4?[{text:'Klient prosi o test w poniedziałek po 12:00. Rozbieżność w limicie SMS do wyjaśnienia z IT.',by:'Anna — opiekun',at:stamp('11.09.2026','11:00')}]:[]};
+      returning,mode:['sent','opened','changes'].includes(survey)?(returning?'confirm_previous':'new_survey'):null,proposed:['sent','opened','changes'].includes(survey)&&returning?JSON.parse(JSON.stringify({...previousAnswers,date_start:start,date_end:end,edition_year_label:'2026'})):null,answers,previousAnswers,answersVersion:survey==='confirmed'?1:0,clientNote:survey==='confirmed'&&i%2===1?'Wyniki chcemy publikować dopiero po weryfikacji, nie na bieżąco. Lista ulic – prześlemy do 12.09.':'',platform,resolution:i%3===0?{file:'Uchwała nr XXI/'+(120+i)+'/2026.pdf',fields:{max_votes_total:{value:3,quote:'Każdy mieszkaniec może oddać maksymalnie trzy głosy.'},date_start:{value:start,quote:'Głosowanie rozpoczyna się '+fmtDate(start)+'.'}}}:null,evidence,checks,events,notes:i===4?[{text:'Klient prosi o test w poniedziałek po 12:00. Rozbieżność w limicie SMS do wyjaśnienia z IT.',by:'Anna — opiekun',at:stamp('11.09.2026','11:00')}]:[]};
   });
 }
 function fmtDate(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleDateString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'})}
@@ -392,6 +475,7 @@ const byId=id=>S.find(x=>x.id===Number(id));
    IKONY
    ============================================================ */
 const ICONS={
+  edit:'<path d="m15 4 5 5M3 21l5-1L21 7l-5-5L3 15z"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/>',
   mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
   send:'<path d="m22 2-7 20-4-9L2 9zM11 13 22 2"/>',
@@ -421,6 +505,8 @@ const badge=(def,extra='')=>`<span class="badge ${def.cls}">${icon(def.ico)}${E(
    STAN WIDOKU
    ============================================================ */
 let view='lista',currentId=null,tab='Klient';
+let wiz=null;            // stan kreatora „Ustalenie”
+let pub={editing:false,review:false,draft:null}; // stan widoku klienta
 let startWindow='all',sort={key:'start',dir:1};
 
 /* ============================================================
@@ -535,6 +621,7 @@ function renderDetail(a){
     <div><h1>${E(a.client)}</h1><p>Głosowanie · edycja ${E(a.edition)} &nbsp; ${badge(SURVEY_STATUS[a.survey])} &nbsp; ${badge(TEST_STATUS[a.test])}</p></div>
     <div class="actions">
       <a class="btn" href="${E(a.platformUrl)}" target="_blank" rel="noopener">${icon('eye')}Platforma gminy <span class="visually-hidden">(otwiera się w nowej karcie)</span></a>
+      ${a.survey!=='none'?`<a class="btn" href="#klient/${a.id}/podglad">${icon('user')}Widok klienta</a>`:''}
       ${pa?`<button type="button" class="btn primary" data-act="${pa.act}" data-id="${a.id}">${icon(pa.ico)}${pa.label}</button>`:''}
     </div>
   </div>
@@ -553,7 +640,7 @@ function renderDetail(a){
           ${a.survey==='confirmed'?`<button type="button" class="btn sm primary" data-act="resend" data-id="${a.id}">${icon('refresh')}Wyślij ankietę ponownie</button>`:a.survey==='none'||a.survey==='expired'||a.survey==='changes'?`<button type="button" class="btn sm primary" data-act="send" data-id="${a.id}">${icon('send')}${a.survey==='changes'?'Wyślij poprawioną':'Wyślij ankietę'}</button>`:`<button type="button" class="btn sm" data-act="remind" data-id="${a.id}">${icon('mail')}Przypomnij o ankiecie</button>`}
           <button type="button" class="btn sm" data-act="note" data-id="${a.id}">Dodaj notatkę</button>
         </div>
-        ${a.survey==='sent'||a.survey==='opened'?`<p class="small muted" style="margin-top:12px">Makieta: <button type="button" class="btn ghost sm" data-act="demo-confirm" data-id="${a.id}">symuluj potwierdzenie klienta</button></p>`:''}
+        ${a.survey!=='none'?`<p class="small muted" style="margin-top:12px">Tak widzi to gmina: <a href="#klient/${a.id}/podglad">otwórz widok klienta</a>${a.survey==='sent'||a.survey==='opened'?' — tam możesz też zasymulować potwierdzenie.':''}</p>`:''}
       </div></section>
       <section class="panel"><div class="panelhead"><h3>Historia</h3></div><div class="panelbody">
         <ol class="timeline">${a.events.slice(0,6).map(e=>`<li><time>${E(e.at)}</time><div>${E(e.text)}<div class="by">${E(e.by)}</div></div></li>`).join('')}</ol>
@@ -576,14 +663,15 @@ function tabClient(a){
   if(confirmed&&ev)head=`<div class="notice ok">${icon('check')}<div>Potwierdzone <strong>${E(ev.at)}</strong> przez <strong>${E(ev.name)}</strong> (${E(ev.position)}, ${E(ev.organization)}). ${ev.choice==='changes'?`Klient wybrał „Chcę wprowadzić zmiany” i zmienił ${changed.length} ${plural(changed.length,'pole','pola','pól')} względem edycji ${prevEd}.`:ev.choice==='confirm'?`Klient wybrał „Potwierdzam bez zmian” — zasady jak w edycji ${prevEd}.`:`Pierwsza edycja tej gminy u nas — zasady ustalone w ankiecie.`}${ev.version>1?` Wersja v${ev.version} nadpisała poprzednie odpowiedzi.`:''}</div></div>`;
 
   // Które odpowiedzi pokazać: potwierdzone → bieżące; brak potwierdzenia → zasady z poprzedniej edycji (jeśli klient je ma).
-  const shown=confirmed?a.answers:a.previousAnswers;
+  const inFlight=['sent','opened','changes'].includes(s);
+  const shown=confirmed?a.answers:inFlight?(a.mode==='new_survey'?null:(a.proposed||a.previousAnswers)):a.previousAnswers;
   const rowsHtml=shown?SURVEY.fields.map(([k,l])=>{const ch=confirmed&&changed.includes(k);return `<tr class="${ch?'changed':''}"><td class="lbl">${E(l)}</td><td>${E(fmtAnswer(k,shown))}${ch?`<span class="tag-changed">zmienione</span>`:''}</td></tr>`}).join(''):'';
   const answersPanel=shown?`
-  <section class="panel"><div class="panelhead"><h2>${confirmed?'Odpowiedzi klienta (kanoniczne)':`Zasady z edycji ${prevEd}`}</h2>${confirmed?`<span class="badge ok">${icon('check')}v${a.answersVersion} · potwierdzone</span>`:`<span class="badge">${icon('clock')}do potwierdzenia w ankiecie</span>`}</div>
-    <div class="panelbody">${confirmed?'':`<p class="small muted" style="margin-bottom:12px">Zasady, na których gmina głosowała w edycji ${prevEd}. Nie są potwierdzone na edycję ${E(a.edition)} — ankieta pokaże je klientowi jako punkt wyjścia.</p>`}<div class="tablewrap"><table class="answers"><tbody>${rowsHtml}</tbody></table></div>
+  <section class="panel"><div class="panelhead"><h2>${confirmed?'Odpowiedzi klienta (kanoniczne)':inFlight?'Zasady wysłane do potwierdzenia':`Zasady z edycji ${prevEd}`}</h2>${confirmed?`<span class="badge ok">${icon('check')}v${a.answersVersion} · potwierdzone</span>`:inFlight?`<span class="badge info">${icon('send')}u klienta</span>`:`<span class="badge">${icon('clock')}do potwierdzenia w ankiecie</span>`}</div>
+    <div class="panelbody">${confirmed?'':inFlight?(()=>{const base=a.answers||a.previousAnswers;const n=a.proposed&&base?changedFields(a.proposed,base).length:0;return `<p class="small muted" style="margin-bottom:12px">Tryb „potwierdzenie ${a.answers?'odpowiedzi v'+a.answersVersion:'zasad z edycji '+prevEd}”${n?' — opiekun zmienił '+n+' '+plural(n,'pole','pola','pól')+' przed wysyłką':''}. Klient może potwierdzić bez zmian albo wprowadzić własne.</p>`})():`<p class="small muted" style="margin-bottom:12px">Zasady, na których gmina głosowała w edycji ${prevEd}. Nie są potwierdzone na edycję ${E(a.edition)} — ankieta pokaże je klientowi jako punkt wyjścia.</p>`}<div class="tablewrap"><table class="answers"><tbody>${rowsHtml}</tbody></table></div>
     ${confirmed&&a.clientNote?`<p class="small muted" style="margin-top:14px">Wolny tekst klienta: „${E(a.clientNote)}”</p>`:''}
     </div></section>`:`
-  <section class="panel"><div class="panelbody"><div class="empty" style="padding:32px 16px">${icon('file')}<h3>Brak zasad głosowania</h3><p class="muted">Gmina nie głosowała z nami w poprzednich edycjach, więc nie ma czego pokazać. Zasady pojawią się tu po wypełnieniu ankiety przez klienta.</p>${s==='none'||s==='expired'?`<button type="button" class="btn primary" data-act="send" data-id="${a.id}">${icon('send')}Wyślij ankietę</button>`:''}</div></div></section>`;
+  <section class="panel"><div class="panelbody"><div class="empty" style="padding:32px 16px">${icon('file')}<h3>${inFlight?'Pusta ankieta u klienta':'Brak zasad głosowania'}</h3><p class="muted">${inFlight?'Wysłano nową ankietę — klient uzupełnia zasady od zera. Pojawią się tu po potwierdzeniu.':'Gmina nie głosowała z nami w poprzednich edycjach, więc nie ma czego pokazać. Zasady pojawią się tu po wypełnieniu ankiety przez klienta.'}</p>${s==='none'||s==='expired'?`<button type="button" class="btn primary" data-act="send" data-id="${a.id}">${icon('send')}Wyślij ankietę</button>`:''}</div></div></section>`;
 
   return head+answersPanel+`
   ${confirmed&&hasPrev?`<section class="panel"><div class="panelhead"><h2>Zmiany względem edycji ${prevEd}</h2>${changed.length?`<span class="small muted">${changed.length} ${plural(changed.length,'pole','pola','pól')}</span>`:''}</div><div class="panelbody">
@@ -651,18 +739,157 @@ function tabNotes(a){
   </div></section>`;
 }
 
+
+/* ============================================================
+   WIDOK: USTALENIE (kreator wysyłki ankiety) — zaczyna od wyboru trybu
+   ============================================================ */
+function newWiz(a){
+  const base=a.answers||a.previousAnswers;
+  const proposed=base?{...JSON.parse(JSON.stringify(base)),date_start:a.start,date_end:a.end,edition_year_label:a.edition}:null;
+  return {id:a.id,step:1,mode:base?'confirm_previous':'new_survey',edit:false,proposed,email:'',expires:'2026-10-01',message:''};
+}
+function renderWiz(a){
+  wiz??=newWiz(a);if(wiz.id!==a.id)wiz=newWiz(a);const w=wiz;
+  const prevEd=String(Number(a.edition)-1);const base=a.answers||a.previousAnswers;const resend=a.survey==='confirmed';
+  const srcLabel=a.answers?`potwierdzone odpowiedzi v${a.answersVersion} (edycja ${E(a.edition)})`:`zasady z edycji ${prevEd}`;
+  const changedByUs=w.proposed&&base?changedFields(w.proposed,base):[];
+  const step1=`
+    ${resend?`<div class="notice warn">${icon('alert')}<div><strong>Klient potwierdził już odpowiedzi v${a.answersVersion} (${E(a.evidence?.at||'')}).</strong><br>Po nowym potwierdzeniu odpowiedzi dla edycji ${E(a.edition)} zostaną nadpisane wersją v${a.answersVersion+1}. Do tego czasu obowiązuje v${a.answersVersion}.</div></div>`:''}
+    <fieldset class="choices"><legend>Sposób uzgodnienia zasad</legend>
+      <label class="choice ${!base?'disabled':''}"><input type="radio" name="mode" data-wiz value="confirm_previous" ${w.mode==='confirm_previous'?'checked':''} ${!base?'disabled':''}><span><strong>Potwierdzenie zasad z poprzedniej edycji</strong><p>Klient otrzyma podsumowanie ${base?srcLabel:'zasad'}. Może je potwierdzić jednym kliknięciem albo wprowadzić zmiany.</p>${!base?`<p class="muted">Niedostępne — ${E(a.client)} nie ma u nas zasad z wcześniejszych edycji.</p>`:''}</span></label>
+      <label class="choice"><input type="radio" name="mode" data-wiz value="new_survey" ${w.mode==='new_survey'?'checked':''}><span><strong>Pusta ankieta</strong><p>Klient uzupełnia wszystkie zasady od zera i zatwierdza podsumowanie oświadczeniem.</p></span></label>
+    </fieldset>
+    ${w.mode==='confirm_previous'&&base?`
+    <section class="panel inner"><div class="panelhead"><h3>Zasady, które zobaczy klient</h3><div class="actions">${changedByUs.length?`<span class="badge warn">${icon('edit')}${changedByUs.length} ${plural(changedByUs.length,'pole zmienione','pola zmienione','pól zmienionych')}</span>`:''}${w.edit?`<button type="button" class="btn sm" data-act="wiz-edit-cancel">Anuluj edycję</button>`:`<button type="button" class="btn sm" data-act="wiz-edit">${icon('edit')}Edytuj przed wysyłką</button>`}</div></div>
+      <div class="panelbody">${w.edit?`<form data-form="wiz-edit"><p class="small muted" style="margin-bottom:12px">Źródło: ${srcLabel}. Zmienione pola zostaną oznaczone w ankiecie klienta jako propozycja opiekuna.</p>${answersForm(w.proposed,'w')}<div class="actions" style="margin-top:16px"><button type="submit" class="btn primary">${icon('check')}Zapisz zmiany</button><button type="button" class="btn ghost" data-act="wiz-edit-reset">Przywróć ${E(srcLabel)}</button></div></form>`:`<p class="small muted" style="margin-bottom:12px">Źródło: ${srcLabel}. Daty i rok edycji dostosowane do bieżącego głosowania.</p><div class="tablewrap"><table class="answers"><tbody>${SURVEY.fields.map(([k,l])=>{const ch=changedByUs.includes(k);return `<tr class="${ch?'changed':''}"><td class="lbl">${E(l)}</td><td>${E(fmtAnswer(k,w.proposed))}${ch?`<span class="tag-changed">zmienione przez opiekuna</span>`:''}</td></tr>`}).join('')}</tbody></table></div>`}</div></section>`:''}
+    ${w.mode==='new_survey'?`<div class="notice info">${icon('file')}<div><strong>Klient dostanie pustą ankietę z ${SURVEY.fields.length} pytaniami.</strong><br>${base?`Zasady z poprzedniej edycji nie zostaną podpowiedziane. Jeśli chcesz je pokazać jako punkt wyjścia, wybierz pierwszy tryb.`:'Po potwierdzeniu odpowiedzi staną się zasadami tej edycji.'}</div></div>`:''}`;
+  const step2=`
+    <div class="formgrid">
+      <div class="field"><label for="wiz-email">Adres e-mail odbiorcy w gminie</label><input id="wiz-email" type="email" autocomplete="email" placeholder="np. bo@gmina.pl" value="${E(w.email)}" required><span class="hint">Dane kontaktowe prowadzisz w CRM — tu wpisz tylko adres, na który ma trafić link.</span></div>
+      <div class="field"><label for="wiz-expires">Link ważny do</label><input id="wiz-expires" type="date" value="${E(w.expires)}" required></div>
+      <div class="field full"><label for="wiz-msg">Wiadomość do klienta <span class="muted">(opcjonalnie)</span></label><textarea id="wiz-msg" rows="3" placeholder="np. Prosimy o potwierdzenie do piątku — wtedy zdążymy z testem przed startem.">${E(w.message)}</textarea></div>
+    </div>
+    <div class="preview" style="margin-top:8px"><strong>${w.mode==='confirm_previous'?'Potwierdzenie zasad głosowania':'Ankieta: zasady głosowania'} · ${E(a.client)} · edycja ${E(a.edition)}</strong>
+      <p class="small muted" style="margin-top:4px">${w.mode==='confirm_previous'?`Klient zobaczy ${SURVEY.fields.length} zasad z możliwością „Potwierdzam bez zmian” albo „Chcę wprowadzić zmiany”.`:`Klient wypełni ${SURVEY.fields.length} pytań i zatwierdzi podsumowanie.`} Na końcu podpisuje oświadczenie.</p>
+      <p class="small" style="margin-top:8px"><em>${E(SURVEY.closing)}</em></p></div>`;
+  return `
+  <a class="back" href="#klient/${a.id}">${icon('back')}${E(a.client)} — karta klienta</a>
+  <div class="pagehead">
+    <div><h1>${resend?'Wyślij ankietę ponownie':'Ustalenie zasad głosowania'}</h1><p>${E(a.client)} · edycja ${E(a.edition)} · ${badge({label:'Krok '+w.step+' z 2',cls:'info',ico:w.step===1?'file':'send'})}</p></div>
+  </div>
+  <div class="split">
+    <section class="panel"><div class="panelbody">
+      <ol class="stepper">${['Sposób uzgodnienia','Wysyłka'].map((n,i)=>`<li class="${w.step>i?'active':''}"><span>0${i+1}</span>${n}</li>`).join('')}</ol>
+      ${w.step===1?`<div class="wizstep">${step1}
+        <div class="formactions">
+          <a class="btn ghost" href="#klient/${a.id}">Anuluj</a>
+          <button type="button" class="btn primary" data-act="wiz-next" ${w.edit?'disabled title="Najpierw zapisz albo anuluj edycję zasad"':''}>Dalej ${icon('arrow')}</button>
+        </div></div>`:`<form data-form="wiz">${step2}
+        <div class="formactions">
+          <button type="button" class="btn" data-act="wiz-back">${icon('back')}Wstecz</button>
+          <button type="submit" class="btn primary">${icon('send')}${resend?'Wyślij ponownie':'Wyślij ankietę'}</button>
+        </div></form>`}
+    </div></section>
+    <aside>
+      <section class="panel"><div class="panelhead"><h3>Podsumowanie</h3></div><div class="panelbody">
+        <div class="kv"><span>Klient</span><strong>${E(a.client)}</strong></div>
+        <div class="kv"><span>Edycja</span><strong>${E(a.edition)}</strong></div>
+        <div class="kv"><span>Głosowanie</span><strong>${fmtDate(a.start)} – ${fmtDate(a.end)}</strong></div>
+        <div class="kv"><span>Tryb</span><strong>${w.mode==='confirm_previous'?'Potwierdzenie poprzednich zasad':'Pusta ankieta'}</strong></div>
+        ${w.mode==='confirm_previous'?`<div class="kv"><span>Zmiany opiekuna</span><strong>${changedByUs.length||'brak'}</strong></div>`:''}
+        <div class="kv"><span>Ankieta</span><strong>${SURVEY.fields.length} pytań, 1 oświadczenie</strong></div>
+      </div></section>
+      <p class="small muted">Opiekun odpowiada za potwierdzenie zasad, weryfikację ustawień i kompletność testów przed startem.</p>
+    </aside>
+  </div>`;
+}
+function sendFromWiz(a){
+  const w=wiz;const resend=a.survey==='confirmed';
+  a.mode=w.mode;a.proposed=w.mode==='confirm_previous'?JSON.parse(JSON.stringify(w.proposed)):null;
+  a.survey='sent';a.test='blocked';a.expires=w.expires;a.sentTo=w.email;a.sentAt=now();
+  const base=a.answers||a.previousAnswers;const ch=w.mode==='confirm_previous'&&base?changedFields(w.proposed,base).length:0;
+  addEvent(a,`${resend?'Wysłano ankietę ponownie':'Wysłano ankietę'} na ${w.email} — tryb: ${w.mode==='confirm_previous'?'potwierdzenie poprzednich zasad'+(ch?` (${ch} ${plural(ch,'pole zmienione','pola zmienione','pól zmienionych')} przez opiekuna)`:''):'pusta ankieta'}${resend?` — po potwierdzeniu nadpisze v${a.answersVersion}`:''}`);
+  toast(`Ankieta wysłana na ${w.email}. Link ważny do ${fmtDate(w.expires)}.`);
+  wiz=null;tab='Klient';location.hash=`#klient/${a.id}/Klient`;
+}
+
+/* ============================================================
+   WIDOK: KLIENT (podgląd strony potwierdzenia, tak jak widzi ją gmina)
+   ============================================================ */
+function renderPublic(a){
+  const locked=a.survey==='confirmed'&&a.answers;const expired=a.survey==='expired';
+  const mode=a.mode||(a.proposed?'confirm_previous':'new_survey');
+  const base=a.proposed||{date_start:a.start,date_end:a.end,edition_year_label:a.edition};
+  const vals=pub.draft||base;
+  const editing=!locked&&!pub.review&&(pub.editing||mode==='new_survey');
+  const prevEd=String(Number(a.edition)-1);
+  const title=locked?'Dziękujemy za potwierdzenie':expired?'Link wygasł':editing?'Ustalmy zasady głosowania':pub.review?'Sprawdź odpowiedzi':'Potwierdź zasady głosowania';
+  const changedVsBase=pub.draft&&a.proposed?changedFields(pub.draft,a.proposed):[];
+  const rulesTable=(v,mark)=>`<div class="tablewrap"><table class="answers"><tbody>${SURVEY.fields.map(([k,l])=>{const ch=mark&&mark.includes(k);return `<tr class="${ch?'changed':''}"><td class="lbl">${E(l)}</td><td>${E(fmtAnswer(k,v))}${ch?`<span class="tag-changed">zmienione</span>`:''}</td></tr>`}).join('')}</tbody></table></div>`;
+  let body='';
+  if(expired){body=`<div class="notice danger">${icon('alert')}<div><strong>Link do ankiety wygasł.</strong><br>Poproś opiekuna w MediaPark o nowe zaproszenie.</div></div>`}
+  else if(locked){body=`
+    <div class="notice ok">${icon('check')}<div>Potwierdzone ${E(a.evidence.at)} przez ${E(a.evidence.name)} (${E(a.evidence.position)}). Kopia potwierdzenia została wysłana e-mailem${a.sentTo?' na '+E(a.sentTo):''}.</div></div>
+    <section class="panel"><div class="panelhead"><h2>Potwierdzone zasady · v${a.answersVersion}</h2><button type="button" class="btn sm" data-act="toast" data-msg="Drukowanie / PDF — w makiecie tylko podgląd.">${icon('file')}PDF / drukuj</button></div><div class="panelbody">${rulesTable(a.answers)}</div></section>
+    <section class="panel"><div class="panelbody"><h3>Dowód potwierdzenia</h3><p class="small muted" style="margin:8px 0">${E(a.evidence.name)} · ${E(a.evidence.position)} · ${E(a.evidence.organization)}</p><p class="small">${E(a.evidence.hash)}</p></div></section>`}
+  else if(editing){body=`
+    <section class="panel"><div class="panelhead"><h2>Zasady głosowania</h2><span class="small muted">${mode==='confirm_previous'?'Zmień tylko to, co różni się od poprzedniej edycji':'Wypełnij wszystkie pola'}</span></div>
+      <form class="panelbody" data-form="pub-edit">${answersForm(vals,'p')}
+      <div class="formactions">${mode==='confirm_previous'?`<button type="button" class="btn ghost" data-act="pub-cancel">${icon('back')}Wróć do zasad</button>`:'<span class="small muted">Odpowiedzi sprawdzisz przed wysłaniem.</span>'}<button type="submit" class="btn primary">Sprawdź odpowiedzi ${icon('arrow')}</button></div></form></section>`}
+  else{body=`
+    <section class="panel"><div class="panelhead"><h2>${pub.review?'Twoje odpowiedzi':'Zasady do potwierdzenia'}</h2><span class="small muted">${pub.review?(changedVsBase.length?`${changedVsBase.length} ${plural(changedVsBase.length,'pole zmienione','pola zmienione','pól zmienionych')}`:'bez zmian'):`na podstawie edycji ${prevEd}`}</span></div><div class="panelbody">${rulesTable(vals,pub.review?changedVsBase:null)}</div></section>
+    ${pub.review?'':`<div class="actions" style="margin-bottom:20px"><button type="button" class="btn" data-act="pub-edit">${icon('edit')}Chcę wprowadzić zmiany</button></div>`}
+    <section class="panel"><div class="panelhead"><h2>Osoba potwierdzająca</h2></div>
+      <form class="panelbody" data-form="pub-confirm">
+        <div class="formgrid">
+          <div class="field"><label for="pc-first">Imię</label><input id="pc-first" name="first" type="text" autocomplete="given-name" required></div>
+          <div class="field"><label for="pc-last">Nazwisko</label><input id="pc-last" name="last" type="text" autocomplete="family-name" required></div>
+          <div class="field"><label for="pc-pos">Stanowisko</label><input id="pc-pos" name="position" type="text" autocomplete="organization-title" required></div>
+          <div class="field"><label for="pc-email">E-mail służbowy</label><input id="pc-email" name="email" type="email" autocomplete="email" value="${E(a.sentTo||'')}" required></div>
+        </div>
+        <label class="consent"><input type="checkbox" name="consent" required><span>${E(SURVEY.closing)}</span></label>
+        <div class="formactions">${pub.review?`<button type="button" class="btn ghost" data-act="pub-edit">${icon('back')}Popraw odpowiedzi</button>`:'<span class="small muted">Po potwierdzeniu ta wersja zostanie zablokowana.</span>'}<button type="submit" class="btn primary">${icon('check')}${pub.review?'Wyślij i potwierdź':'Potwierdzam — bez zmian'}</button></div>
+      </form></section>`}
+  return `
+  <div class="pubbar"><span class="small muted">Podgląd widoku klienta · tak widzi to gmina</span><a class="btn sm" href="#klient/${a.id}/Klient">${icon('back')}Wróć do karty klienta</a></div>
+  <div class="public">
+    <header class="pubhead"><span class="mark" aria-hidden="true">MP</span><div><strong>MediaPark · Budżet Obywatelski</strong><span class="small muted">Potwierdzenie zasad głosowania</span></div></header>
+    <div class="pubintro"><h1>${title}</h1><p>${E(a.client)} · głosowanie ${fmtDate(a.start)} – ${fmtDate(a.end)} · edycja ${E(a.edition)}<br>${locked?'Potwierdzenie zostało zapisane. Ta wersja zasad jest teraz tylko do odczytu.':'Sprawdź zasady, na podstawie których przygotujemy konfigurację głosowania.'}</p></div>
+    ${body}
+    <p class="small muted" style="text-align:center;margin-top:24px">MediaPark · Potwierdzenie zasad głosowania · makieta</p>
+  </div>`;
+}
+function confirmFromPublic(a,form){
+  const fd=new FormData(form);
+  const answers=JSON.parse(JSON.stringify(pub.draft||a.proposed));
+  const v=(a.answersVersion||0)+1;const prevNote=a.answersVersion?`Odpowiedzi v${a.answersVersion} nadpisane wersją v${v}`:'Zapisano odpowiedzi v1';
+  const choice=!a.previousAnswers?'new':changedFields(answers,a.previousAnswers).length?'changes':'confirm';
+  a.answers=answers;a.platform=pick(answers,TEST_KEYS);a.answersVersion=v;a.survey='confirmed';a.test='blocked';a.checks={};a.clientNote=a.clientNote||'';
+  a.evidence={name:`${fd.get('first')} ${fd.get('last')}`.trim(),position:fd.get('position'),organization:orgNameOf(a),email:fd.get('email'),at:now(),choice,version:v,hash:'SHA-256 · '+Math.random().toString(16).slice(2,8)+'…demo'};
+  addEvent(a,`Klient potwierdził zasady (v${v})${choice==='changes'?' — wybrał „Chcę wprowadzić zmiany”':choice==='confirm'?' bez zmian':''}${v>1?' — poprzednie odpowiedzi nadpisane':''}`,a.evidence.name);
+  if(v>1)addEvent(a,prevNote,'system');
+  pub={editing:false,review:false,draft:null};render();toast(prevNote+'.');
+}
+
 /* ============================================================
    RENDER I ROUTING
    ============================================================ */
 const main=document.getElementById('main');
 function render(){
-  if(view==='klient'){const a=byId(currentId);if(!a){location.hash='#lista';return}main.innerHTML=renderDetail(a);document.title=a.client+' — Testy głosowań';}
+  const a=currentId?byId(currentId):null;
+  if(view!=='lista'&&!a){location.hash='#lista';return}
+  if(view==='klient'){main.innerHTML=renderDetail(a);document.title=a.client+' — Testy głosowań';}
+  else if(view==='ustalenie'){main.innerHTML=renderWiz(a);document.title='Ustalenie · '+a.client+' — Testy głosowań';}
+  else if(view==='podglad'){main.innerHTML=renderPublic(a);document.title='Widok klienta · '+a.client+' — Testy głosowań';}
   else{main.innerHTML=renderList();document.title='Testy głosowań — MediaPark — makieta';}
 }
 function route(){
   const h=location.hash.replace('#','')||'lista';
   const [v,id,t]=h.split('/');
-  if(v==='klient'&&id){view='klient';currentId=Number(id);if(t)tab=decodeURIComponent(t);}
+  const prev=view;
+  if(v==='klient'&&id&&t==='podglad'){view='podglad';currentId=Number(id);if(prev!=='podglad')pub={editing:false,review:false,draft:null};}
+  else if(v==='klient'&&id){view='klient';currentId=Number(id);if(t)tab=decodeURIComponent(t);}
+  else if(v==='ustalenie'&&id){view='ustalenie';if(Number(id)!==currentId||prev!=='ustalenie')wiz=null;currentId=Number(id);}
   else{view='lista';}
   render();
   main.focus({preventScroll:true});
@@ -678,30 +905,13 @@ function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');clearT
 function addEvent(a,text,by){a.events.unshift({text,by:by||a.owner,at:now()});save()}
 
 const dlg=document.getElementById('dlg-send');
-function openSend(a,mode){
-  const remind=mode==='remind';const resend=mode==='resend';
-  document.getElementById('dlg-send-title').textContent=remind?'Przypomnij o ankiecie':resend?'Wyślij ankietę ponownie':'Wyślij ankietę';
+function openSend(a){
+  document.getElementById('dlg-send-title').textContent='Przypomnij o ankiecie';
   document.getElementById('dlg-send-body').innerHTML=`
-    ${resend?`<div class="notice warn">${icon('alert')}<div><strong>Klient potwierdził już odpowiedzi v${a.answersVersion} (${E(a.evidence?.at||'')}).</strong><br>Po nowym potwierdzeniu odpowiedzi dla edycji ${E(a.edition)} zostaną nadpisane wersją v${a.answersVersion+1}. Do tego czasu obowiązuje v${a.answersVersion}. Test trzeba będzie powtórzyć.</div></div>`:''}
-    <div class="field"><label for="send-to">Adres e-mail odbiorcy w gminie · ${E(a.client)}</label><input id="send-to" type="email" autocomplete="email" placeholder="np. bo@gmina.pl" required><span class="hint">Dane kontaktowe prowadzisz w CRM — tu wpisz tylko adres, na który ma trafić link.</span></div>
-    <div class="preview">
-      <strong>${remind?'Przypomnienie: ':''}${E(SURVEY.title)}</strong>
-      <p class="small muted" style="margin-top:4px">Ta sama ankieta dla każdej gminy. Klient odpowiada na pytania i podpisuje oświadczenie.</p>
-      <ol>${SURVEY.fields.map(([,l])=>`<li>${E(l)}</li>`).join('')}</ol>
-      <p class="small" style="margin-top:10px"><em>${E(SURVEY.closing)}</em></p>
-    </div>
-    <div class="field" style="margin-top:16px"><label for="send-msg">Wiadomość do klienta (opcjonalnie)</label><textarea id="send-msg" rows="3" placeholder="np. Prosimy o potwierdzenie do piątku — wtedy zdążymy z testem przed startem.">${remind?'Dzień dobry, przypominamy o ankiecie z zasadami głosowania. Link jest ważny do '+fmtDate(a.expires)+'.':''}</textarea></div>
-    <p class="small muted">Link będzie ważny 14 dni. Po potwierdzeniu odpowiedzi klienta zostaną zablokowane do edycji.</p>`;
-  const ok=document.getElementById('dlg-send-ok');
-  ok.innerHTML=icon('send')+(remind?'Wyślij przypomnienie':resend?'Wyślij ponownie':'Wyślij ankietę');
-  ok.onclick=()=>{
-    const to=document.getElementById('send-to');
-    if(!to.checkValidity()){to.reportValidity();return}
-    if(remind){addEvent(a,'Wysłano przypomnienie o ankiecie na '+to.value);toast('Przypomnienie wysłane na '+to.value+'.');}
-    else if(resend){a.survey='sent';a.test='blocked';a.expires='2026-10-01';addEvent(a,`Wysłano ankietę ponownie na ${to.value} — po potwierdzeniu nadpisze v${a.answersVersion}`);toast('Ankieta wysłana ponownie na '+to.value+'. Odpowiedzi v'+a.answersVersion+' obowiązują do nowego potwierdzenia.');}
-    else{a.survey='sent';a.test='blocked';a.expires='2026-10-01';addEvent(a,'Wysłano ankietę na '+to.value);toast('Ankieta wysłana na '+to.value+'. Link ważny do '+fmtDate(a.expires)+'.');}
-    dlg.close();render();
-  };
+    <div class="field"><label for="send-to">Adres e-mail odbiorcy w gminie · ${E(a.client)}</label><input id="send-to" type="email" autocomplete="email" placeholder="np. bo@gmina.pl" value="${E(a.sentTo||'')}" required></div>
+    <div class="field"><label for="send-msg">Wiadomość</label><textarea id="send-msg" rows="3">Dzień dobry, przypominamy o ankiecie z zasadami głosowania. Link jest ważny do ${fmtDate(a.expires)}.</textarea></div>`;
+  const ok=document.getElementById('dlg-send-ok');ok.innerHTML=icon('mail')+'Wyślij przypomnienie';
+  ok.onclick=()=>{const to=document.getElementById('send-to');if(!to.checkValidity()){to.reportValidity();return}addEvent(a,'Wysłano przypomnienie o ankiecie na '+to.value);toast('Przypomnienie wysłane na '+to.value+'.');dlg.close();render();};
   dlg.showModal();
 }
 dlg.addEventListener('click',e=>{if(e.target.closest('[data-close]'))dlg.close()});
@@ -714,35 +924,41 @@ document.addEventListener('click',e=>{
   switch(b.dataset.act){
     case 'window-all':startWindow='all';render();break;
     case 'reset':if(confirm('Przywrócić dane przykładowe? Twoje zmiany w makiecie zostaną usunięte.')){localStorage.removeItem(VERSION);S=seed();render();toast('Dane przykładowe przywrócone.')}break;
-    case 'send':openSend(a,'send');break;
-    case 'remind':openSend(a,'remind');break;
-    case 'resend':openSend(a,'resend');break;
-    case 'demo-confirm':{ // makieta: klient wypełnia ankietę i potwierdza; nowe odpowiedzi nadpisują poprzednie dla tej edycji
-      const v=(a.answersVersion||0)+1;const prevNote=a.answersVersion?`Odpowiedzi v${a.answersVersion} nadpisane wersją v${v}`:'Zapisano odpowiedzi v1';
-      const org=a.evidence?.organization||(/^(Urząd Miasta|Miasto) /.test(a.client)?a.client.replace(/^Miasto /,'Urząd Miasta '):'Urząd Gminy '+a.client);
-      if(!a.answers){a.answers=JSON.parse(JSON.stringify(a.previousAnswers||baseAnswers(org)));a.answers.date_start=a.start;a.answers.date_end=a.end;a.answers.edition_year_label=a.edition;}
-      a.answers.sms_per_phone_limit=a.answers.sms_per_phone_limit===1?2:1;a.answers.duplicate_policy='first_valid';if(v>1)a.answers.max_votes_total=a.answers.max_votes_total===3?4:3;
-      a.platform=pick(a.answers,TEST_KEYS);
-      a.answersVersion=v;a.survey='confirmed';a.test='blocked';a.checks={};
-      a.evidence={name:a.evidence?.name||'Anna Kowalczyk',position:a.evidence?.position||'inspektor ds. partycypacji',organization:org,at:now(),choice:!a.previousAnswers?'new':changedFields(a.answers,a.previousAnswers).length?'changes':'confirm',version:v,hash:'SHA-256 · '+Math.random().toString(16).slice(2,8)+'…demo'};
-      addEvent(a,`Klient potwierdził zasady (v${v})${v>1?' — poprzednie odpowiedzi nadpisane':''}`,a.evidence.name);addEvent(a,prevNote,'system');tab='Klient';render();toast(prevNote+'.');break}
+    case 'send':case 'resend':wiz=null;location.hash=`#ustalenie/${a.id}`;break;
+    case 'remind':openSend(a);break;
     case 'test':location.hash=`#klient/${a.id}/Test`;break;
     case 'note':location.hash=`#klient/${a.id}/${encodeURIComponent('Rozmowy i notatki')}`;setTimeout(()=>document.getElementById('note-text')?.focus(),50);break;
     case 'rerun':{const d=unresolved(a);a.test=d.length?'internal_issues':(a.checks.client?'client_ok':'internal_ok');addEvent(a,d.length?`Test wewnętrzny: ${d.length} ${plural(d.length,'rozbieżność','rozbieżności','rozbieżności')}`:'Test wewnętrzny: bez rozbieżności');render();toast(d.length?'Porównanie zakończone: są rozbieżności.':'Porównanie zakończone: konfiguracja zgodna.');break}
     case 'ready':a.test='ready';addEvent(a,'Oznaczono jako gotowe do startu');render();toast(a.client+': gotowe do startu.');break;
-    case 'edit-rules':toast('Edycja zasad — w makiecie tylko podgląd.');break;
     case 'upload':toast('Wgrywanie plików — w makiecie tylko podgląd.');break;
     case 'toast':toast(b.dataset.msg||'OK');break;
+    // kreator
+    case 'wiz-back':wiz.step=1;render();break;
+    case 'wiz-next':wiz.step=2;render();setTimeout(()=>document.getElementById('wiz-email')?.focus(),30);break;
+    case 'wiz-edit':wiz.edit=true;render();break;
+    case 'wiz-edit-cancel':wiz.edit=false;render();break;
+    case 'wiz-edit-reset':{const a2=byId(currentId);wiz.proposed=newWiz(a2).proposed;wiz.edit=false;render();toast('Przywrócono zasady źródłowe.');break}
+    // widok klienta
+    case 'pub-edit':pub.editing=true;pub.review=false;render();break;
+    case 'pub-cancel':pub.editing=false;pub.review=false;pub.draft=null;render();break;
   }
 });
+// Zmiana trybu w kreatorze — natychmiast przerysuj krok 1.
+document.addEventListener('change',e=>{if(e.target.matches('input[name="mode"][data-wiz]')){wiz.mode=e.target.value;wiz.edit=false;render()}});
 document.addEventListener('change',e=>{
   if(e.target.matches('[data-window]')){startWindow=e.target.value;render();return}
   const c=e.target.closest('[data-check]');if(c){const a=byId(c.dataset.id);const k=c.dataset.check;if(c.checked){a.checks[k]={by:a.owner,at:now()};if(k==='client'&&a.test==='internal_ok')a.test='client_ok';}else delete a.checks[k];save();render();}
 });
 document.addEventListener('submit',e=>{
-  const f=e.target.closest('[data-form="note"]');if(!f)return;e.preventDefault();
-  const a=byId(f.dataset.id);const text=f.text.value.trim();if(!text)return;
-  a.notes.unshift({text,by:a.owner,at:now()});addEvent(a,'Dodano notatkę');render();toast('Notatka zapisana.');
+  const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();
+  const kind=f.dataset.form;const a=byId(f.dataset.id||currentId);
+  if(kind==='note'){const text=f.text.value.trim();if(!text)return;a.notes.unshift({text,by:a.owner,at:now()});addEvent(a,'Dodano notatkę');render();toast('Notatka zapisana.');return}
+  if(kind==='wiz-edit'){wiz.proposed=answersFromForm(f);wiz.edit=false;render();toast('Zapisano zmiany w zasadach do wysyłki.');return}
+  if(kind==='wiz'){
+    wiz.email=f.querySelector('#wiz-email').value.trim();wiz.expires=f.querySelector('#wiz-expires').value;wiz.message=f.querySelector('#wiz-msg').value;
+    sendFromWiz(a);return}
+  if(kind==='pub-edit'){pub.draft=answersFromForm(f);pub.editing=false;pub.review=true;render();window.scrollTo({top:0});return}
+  if(kind==='pub-confirm'){confirmFromPublic(a,f);return}
 });
 
 /* ============================================================
