@@ -668,7 +668,7 @@ function tabClient(a){
   const rowsHtml=shown?SURVEY.fields.map(([k,l])=>{const ch=confirmed&&changed.includes(k);return `<tr class="${ch?'changed':''}"><td class="lbl">${E(l)}</td><td>${E(fmtAnswer(k,shown))}${ch?`<span class="tag-changed">zmienione</span>`:''}</td></tr>`}).join(''):'';
   const answersPanel=shown?`
   <section class="panel"><div class="panelhead"><h2>${confirmed?'Odpowiedzi klienta (kanoniczne)':inFlight?'Zasady wysłane do potwierdzenia':`Zasady z edycji ${prevEd}`}</h2>${confirmed?`<span class="badge ok">${icon('check')}v${a.answersVersion} · potwierdzone</span>`:inFlight?`<span class="badge info">${icon('send')}u klienta</span>`:`<span class="badge">${icon('clock')}do potwierdzenia w ankiecie</span>`}</div>
-    <div class="panelbody">${confirmed?'':inFlight?(()=>{const base=a.answers||a.previousAnswers;const n=a.proposed&&base?changedFields(a.proposed,base).length:0;return `<p class="small muted" style="margin-bottom:12px">Tryb „potwierdzenie ${a.answers?'odpowiedzi v'+a.answersVersion:'zasad z edycji '+prevEd}”${n?' — opiekun zmienił '+n+' '+plural(n,'pole','pola','pól')+' przed wysyłką':''}. Klient może potwierdzić bez zmian albo wprowadzić własne.</p>`})():`<p class="small muted" style="margin-bottom:12px">Zasady, na których gmina głosowała w edycji ${prevEd}. Nie są potwierdzone na edycję ${E(a.edition)} — ankieta pokaże je klientowi jako punkt wyjścia.</p>`}<div class="tablewrap"><table class="answers"><tbody>${rowsHtml}</tbody></table></div>
+    <div class="panelbody">${confirmed?'':inFlight?(()=>{const base=a.answers||a.previousAnswers;const n=a.proposed&&base?changedFields(a.proposed,base).length:0;return `<p class="small muted" style="margin-bottom:12px">${a.mode==='admin_filled'?'Tryb „ankieta wypełniona przez opiekuna” — zasady przygotował opiekun, klient tylko je potwierdza.':`Tryb „potwierdzenie ${a.answers?'odpowiedzi v'+a.answersVersion:'zasad z edycji '+prevEd}”${n?' — opiekun zmienił '+n+' '+plural(n,'pole','pola','pól')+' przed wysyłką':''}.`} Klient może potwierdzić bez zmian albo wprowadzić własne.</p>`})():`<p class="small muted" style="margin-bottom:12px">Zasady, na których gmina głosowała w edycji ${prevEd}. Nie są potwierdzone na edycję ${E(a.edition)} — ankieta pokaże je klientowi jako punkt wyjścia.</p>`}<div class="tablewrap"><table class="answers"><tbody>${rowsHtml}</tbody></table></div>
     ${confirmed&&a.clientNote?`<p class="small muted" style="margin-top:14px">Wolny tekst klienta: „${E(a.clientNote)}”</p>`:''}
     </div></section>`:`
   <section class="panel"><div class="panelbody"><div class="empty" style="padding:32px 16px">${icon('file')}<h3>${inFlight?'Pusta ankieta u klienta':'Brak zasad głosowania'}</h3><p class="muted">${inFlight?'Wysłano nową ankietę — klient uzupełnia zasady od zera. Pojawią się tu po potwierdzeniu.':'Gmina nie głosowała z nami w poprzednich edycjach, więc nie ma czego pokazać. Zasady pojawią się tu po wypełnieniu ankiety przez klienta.'}</p>${s==='none'||s==='expired'?`<button type="button" class="btn primary" data-act="send" data-id="${a.id}">${icon('send')}Wyślij ankietę</button>`:''}</div></div></section>`;
@@ -745,9 +745,11 @@ function tabNotes(a){
    ============================================================ */
 function newWiz(a){
   const base=a.answers||a.previousAnswers;
-  const proposed=base?{...JSON.parse(JSON.stringify(base)),date_start:a.start,date_end:a.end,edition_year_label:a.edition}:null;
-  return {id:a.id,step:1,mode:base?'confirm_previous':'new_survey',edit:false,proposed,email:'',expires:'2026-10-01',message:''};
+  const src=base||baseAnswers(orgNameOf(a));
+  const proposed={...JSON.parse(JSON.stringify(src)),date_start:a.start,date_end:a.end,edition_year_label:a.edition};
+  return {id:a.id,step:1,mode:base?'confirm_previous':'admin_filled',edit:false,adminSaved:false,proposed,email:'',expires:'2026-10-01',message:''};
 }
+const MODE_LABEL={confirm_previous:'Potwierdzenie poprzednich zasad',admin_filled:'Ankieta wypełniona przez opiekuna',new_survey:'Pusta ankieta'};
 function renderWiz(a){
   wiz??=newWiz(a);if(wiz.id!==a.id)wiz=newWiz(a);const w=wiz;
   const prevEd=String(Number(a.edition)-1);const base=a.answers||a.previousAnswers;const resend=a.survey==='confirmed';
@@ -757,8 +759,12 @@ function renderWiz(a){
     ${resend?`<div class="notice warn">${icon('alert')}<div><strong>Klient potwierdził już odpowiedzi v${a.answersVersion} (${E(a.evidence?.at||'')}).</strong><br>Po nowym potwierdzeniu odpowiedzi dla edycji ${E(a.edition)} zostaną nadpisane wersją v${a.answersVersion+1}. Do tego czasu obowiązuje v${a.answersVersion}.</div></div>`:''}
     <fieldset class="choices"><legend>Sposób uzgodnienia zasad</legend>
       <label class="choice ${!base?'disabled':''}"><input type="radio" name="mode" data-wiz value="confirm_previous" ${w.mode==='confirm_previous'?'checked':''} ${!base?'disabled':''}><span><strong>Potwierdzenie zasad z poprzedniej edycji</strong><p>Klient otrzyma podsumowanie ${base?srcLabel:'zasad'}. Może je potwierdzić jednym kliknięciem albo wprowadzić zmiany.</p>${!base?`<p class="muted">Niedostępne — ${E(a.client)} nie ma u nas zasad z wcześniejszych edycji.</p>`:''}</span></label>
+      <label class="choice"><input type="radio" name="mode" data-wiz value="admin_filled" ${w.mode==='admin_filled'?'checked':''}><span><strong>Ankieta wypełniona przez opiekuna</strong><p>Uzupełniasz zasady tutaj${base?' (na start: '+srcLabel+')':' — także gdy gmina nie ma u nas poprzedniej edycji'}. Klient dostaje gotowe zasady tylko do potwierdzenia, z możliwością zgłoszenia zmian.</p></span></label>
       <label class="choice"><input type="radio" name="mode" data-wiz value="new_survey" ${w.mode==='new_survey'?'checked':''}><span><strong>Pusta ankieta</strong><p>Klient uzupełnia wszystkie zasady od zera i zatwierdza podsumowanie oświadczeniem.</p></span></label>
     </fieldset>
+    ${w.mode==='admin_filled'?`
+    <section class="panel inner"><div class="panelhead"><h3>Zasady wypełnione przez opiekuna</h3><div class="actions">${w.adminSaved&&!w.edit?`<span class="badge ok">${icon('check')}gotowe do wysyłki</span><button type="button" class="btn sm" data-act="wiz-edit">${icon('edit')}Edytuj</button>`:''}</div></div>
+      <div class="panelbody">${!w.adminSaved||w.edit?`<form data-form="wiz-edit"><p class="small muted" style="margin-bottom:12px">${base?`Pola wstępnie wypełnione na podstawie: ${srcLabel}. `:'Pola wstępnie wypełnione typowymi ustawieniami — zweryfikuj każde z nich. '}Klient zobaczy te zasady jako gotowe do potwierdzenia.</p>${answersForm(w.proposed,'w')}<div class="actions" style="margin-top:16px"><button type="submit" class="btn primary">${icon('check')}Zapisz zasady</button>${w.adminSaved?`<button type="button" class="btn ghost" data-act="wiz-edit-cancel">Anuluj</button>`:''}</div></form>`:`<div class="tablewrap"><table class="answers"><tbody>${SURVEY.fields.map(([k,l])=>`<tr><td class="lbl">${E(l)}</td><td>${E(fmtAnswer(k,w.proposed))}</td></tr>`).join('')}</tbody></table></div>`}</div></section>`:''}
     ${w.mode==='confirm_previous'&&base?`
     <section class="panel inner"><div class="panelhead"><h3>Zasady, które zobaczy klient</h3><div class="actions">${changedByUs.length?`<span class="badge warn">${icon('edit')}${changedByUs.length} ${plural(changedByUs.length,'pole zmienione','pola zmienione','pól zmienionych')}</span>`:''}${w.edit?`<button type="button" class="btn sm" data-act="wiz-edit-cancel">Anuluj edycję</button>`:`<button type="button" class="btn sm" data-act="wiz-edit">${icon('edit')}Edytuj przed wysyłką</button>`}</div></div>
       <div class="panelbody">${w.edit?`<form data-form="wiz-edit"><p class="small muted" style="margin-bottom:12px">Źródło: ${srcLabel}. Zmienione pola zostaną oznaczone w ankiecie klienta jako propozycja opiekuna.</p>${answersForm(w.proposed,'w')}<div class="actions" style="margin-top:16px"><button type="submit" class="btn primary">${icon('check')}Zapisz zmiany</button><button type="button" class="btn ghost" data-act="wiz-edit-reset">Przywróć ${E(srcLabel)}</button></div></form>`:`<p class="small muted" style="margin-bottom:12px">Źródło: ${srcLabel}. Daty i rok edycji dostosowane do bieżącego głosowania.</p><div class="tablewrap"><table class="answers"><tbody>${SURVEY.fields.map(([k,l])=>{const ch=changedByUs.includes(k);return `<tr class="${ch?'changed':''}"><td class="lbl">${E(l)}</td><td>${E(fmtAnswer(k,w.proposed))}${ch?`<span class="tag-changed">zmienione przez opiekuna</span>`:''}</td></tr>`}).join('')}</tbody></table></div>`}</div></section>`:''}
@@ -769,8 +775,8 @@ function renderWiz(a){
       <div class="field"><label for="wiz-expires">Link ważny do</label><input id="wiz-expires" type="date" value="${E(w.expires)}" required></div>
       <div class="field full"><label for="wiz-msg">Wiadomość do klienta <span class="muted">(opcjonalnie)</span></label><textarea id="wiz-msg" rows="3" placeholder="np. Prosimy o potwierdzenie do piątku — wtedy zdążymy z testem przed startem.">${E(w.message)}</textarea></div>
     </div>
-    <div class="preview" style="margin-top:8px"><strong>${w.mode==='confirm_previous'?'Potwierdzenie zasad głosowania':'Ankieta: zasady głosowania'} · ${E(a.client)} · edycja ${E(a.edition)}</strong>
-      <p class="small muted" style="margin-top:4px">${w.mode==='confirm_previous'?`Klient zobaczy ${SURVEY.fields.length} zasad z możliwością „Potwierdzam bez zmian” albo „Chcę wprowadzić zmiany”.`:`Klient wypełni ${SURVEY.fields.length} pytań i zatwierdzi podsumowanie.`} Na końcu podpisuje oświadczenie.</p>
+    <div class="preview" style="margin-top:8px"><strong>${w.mode==='new_survey'?'Ankieta: zasady głosowania':'Potwierdzenie zasad głosowania'} · ${E(a.client)} · edycja ${E(a.edition)}</strong>
+      <p class="small muted" style="margin-top:4px">${w.mode==='new_survey'?`Klient wypełni ${SURVEY.fields.length} pytań i zatwierdzi podsumowanie.`:`Klient zobaczy ${SURVEY.fields.length} zasad${w.mode==='admin_filled'?' przygotowanych przez opiekuna':''} z możliwością „Potwierdzam bez zmian” albo „Chcę wprowadzić zmiany”.`} Na końcu podpisuje oświadczenie.</p>
       <p class="small" style="margin-top:8px"><em>${E(SURVEY.closing)}</em></p></div>`;
   return `
   <a class="back" href="#klient/${a.id}">${icon('back')}${E(a.client)} — karta klienta</a>
@@ -783,7 +789,7 @@ function renderWiz(a){
       ${w.step===1?`<div class="wizstep">${step1}
         <div class="formactions">
           <a class="btn ghost" href="#klient/${a.id}">Anuluj</a>
-          <button type="button" class="btn primary" data-act="wiz-next" ${w.edit?'disabled title="Najpierw zapisz albo anuluj edycję zasad"':''}>Dalej ${icon('arrow')}</button>
+          <button type="button" class="btn primary" data-act="wiz-next" ${w.edit||(w.mode==='admin_filled'&&!w.adminSaved)?'disabled title="Najpierw zapisz zasady"':''}>Dalej ${icon('arrow')}</button>
         </div></div>`:`<form data-form="wiz">${step2}
         <div class="formactions">
           <button type="button" class="btn" data-act="wiz-back">${icon('back')}Wstecz</button>
@@ -795,7 +801,7 @@ function renderWiz(a){
         <div class="kv"><span>Klient</span><strong>${E(a.client)}</strong></div>
         <div class="kv"><span>Edycja</span><strong>${E(a.edition)}</strong></div>
         <div class="kv"><span>Głosowanie</span><strong>${fmtDate(a.start)} – ${fmtDate(a.end)}</strong></div>
-        <div class="kv"><span>Tryb</span><strong>${w.mode==='confirm_previous'?'Potwierdzenie poprzednich zasad':'Pusta ankieta'}</strong></div>
+        <div class="kv"><span>Tryb</span><strong>${MODE_LABEL[w.mode]}</strong></div>
         ${w.mode==='confirm_previous'?`<div class="kv"><span>Zmiany opiekuna</span><strong>${changedByUs.length||'brak'}</strong></div>`:''}
         <div class="kv"><span>Ankieta</span><strong>${SURVEY.fields.length} pytań, 1 oświadczenie</strong></div>
       </div></section>
@@ -805,10 +811,10 @@ function renderWiz(a){
 }
 function sendFromWiz(a){
   const w=wiz;const resend=a.survey==='confirmed';
-  a.mode=w.mode;a.proposed=w.mode==='confirm_previous'?JSON.parse(JSON.stringify(w.proposed)):null;
+  a.mode=w.mode;a.proposed=w.mode==='new_survey'?null:JSON.parse(JSON.stringify(w.proposed));
   a.survey='sent';a.test='blocked';a.expires=w.expires;a.sentTo=w.email;a.sentAt=now();
   const base=a.answers||a.previousAnswers;const ch=w.mode==='confirm_previous'&&base?changedFields(w.proposed,base).length:0;
-  addEvent(a,`${resend?'Wysłano ankietę ponownie':'Wysłano ankietę'} na ${w.email} — tryb: ${w.mode==='confirm_previous'?'potwierdzenie poprzednich zasad'+(ch?` (${ch} ${plural(ch,'pole zmienione','pola zmienione','pól zmienionych')} przez opiekuna)`:''):'pusta ankieta'}${resend?` — po potwierdzeniu nadpisze v${a.answersVersion}`:''}`);
+  addEvent(a,`${resend?'Wysłano ankietę ponownie':'Wysłano ankietę'} na ${w.email} — tryb: ${w.mode==='confirm_previous'?'potwierdzenie poprzednich zasad'+(ch?` (${ch} ${plural(ch,'pole zmienione','pola zmienione','pól zmienionych')} przez opiekuna)`:''):w.mode==='admin_filled'?'ankieta wypełniona przez opiekuna':'pusta ankieta'}${resend?` — po potwierdzeniu nadpisze v${a.answersVersion}`:''}`);
   toast(`Ankieta wysłana na ${w.email}. Link ważny do ${fmtDate(w.expires)}.`);
   wiz=null;tab='Klient';location.hash=`#klient/${a.id}/Klient`;
 }
@@ -818,7 +824,7 @@ function sendFromWiz(a){
    ============================================================ */
 function renderPublic(a){
   const locked=a.survey==='confirmed'&&a.answers;const expired=a.survey==='expired';
-  const mode=a.mode||(a.proposed?'confirm_previous':'new_survey');
+  const mode=a.mode||(a.proposed?'confirm_previous':'new_survey'); // admin_filled zachowuje się jak confirm_previous
   const base=a.proposed||{date_start:a.start,date_end:a.end,edition_year_label:a.edition};
   const vals=pub.draft||base;
   const editing=!locked&&!pub.review&&(pub.editing||mode==='new_survey');
@@ -837,7 +843,7 @@ function renderPublic(a){
       <form class="panelbody" data-form="pub-edit">${answersForm(vals,'p')}
       <div class="formactions">${mode==='confirm_previous'?`<button type="button" class="btn ghost" data-act="pub-cancel">${icon('back')}Wróć do zasad</button>`:'<span class="small muted">Odpowiedzi sprawdzisz przed wysłaniem.</span>'}<button type="submit" class="btn primary">Sprawdź odpowiedzi ${icon('arrow')}</button></div></form></section>`}
   else{body=`
-    <section class="panel"><div class="panelhead"><h2>${pub.review?'Twoje odpowiedzi':'Zasady do potwierdzenia'}</h2><span class="small muted">${pub.review?(changedVsBase.length?`${changedVsBase.length} ${plural(changedVsBase.length,'pole zmienione','pola zmienione','pól zmienionych')}`:'bez zmian'):`na podstawie edycji ${prevEd}`}</span></div><div class="panelbody">${rulesTable(vals,pub.review?changedVsBase:null)}</div></section>
+    <section class="panel"><div class="panelhead"><h2>${pub.review?'Twoje odpowiedzi':'Zasady do potwierdzenia'}</h2><span class="small muted">${pub.review?(changedVsBase.length?`${changedVsBase.length} ${plural(changedVsBase.length,'pole zmienione','pola zmienione','pól zmienionych')}`:'bez zmian'):mode==='admin_filled'?'przygotowane przez opiekuna MediaPark':`na podstawie edycji ${prevEd}`}</span></div><div class="panelbody">${rulesTable(vals,pub.review?changedVsBase:null)}</div></section>
     ${pub.review?'':`<div class="actions" style="margin-bottom:20px"><button type="button" class="btn" data-act="pub-edit">${icon('edit')}Chcę wprowadzić zmiany</button></div>`}
     <section class="panel"><div class="panelhead"><h2>Osoba potwierdzająca</h2></div>
       <form class="panelbody" data-form="pub-confirm">
@@ -953,7 +959,7 @@ document.addEventListener('submit',e=>{
   const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();
   const kind=f.dataset.form;const a=byId(f.dataset.id||currentId);
   if(kind==='note'){const text=f.text.value.trim();if(!text)return;a.notes.unshift({text,by:a.owner,at:now()});addEvent(a,'Dodano notatkę');render();toast('Notatka zapisana.');return}
-  if(kind==='wiz-edit'){wiz.proposed=answersFromForm(f);wiz.edit=false;render();toast('Zapisano zmiany w zasadach do wysyłki.');return}
+  if(kind==='wiz-edit'){wiz.proposed=answersFromForm(f);wiz.edit=false;wiz.adminSaved=true;render();toast(wiz.mode==='admin_filled'?'Zasady zapisane — gotowe do wysyłki.':'Zapisano zmiany w zasadach do wysyłki.');return}
   if(kind==='wiz'){
     wiz.email=f.querySelector('#wiz-email').value.trim();wiz.expires=f.querySelector('#wiz-expires').value;wiz.message=f.querySelector('#wiz-msg').value;
     sendFromWiz(a);return}

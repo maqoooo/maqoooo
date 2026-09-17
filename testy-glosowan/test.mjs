@@ -96,8 +96,14 @@ for (const width of [1440, 390]) {
   await page.evaluate(() => localStorage.clear()); await page.reload(); await page.waitForSelector('tbody tr');
   await page.click('tr:has-text("Lubawa") [data-act="send"]'); await page.waitForTimeout(200);
   check('„Wyślij ankietę” otwiera kreator ustalenia', page.url().includes('#ustalenie/') && /Ustalenie zasad/.test(await page.locator('h1').innerText()));
-  check('kreator ma dwa tryby (poprzednie zasady / pusta ankieta)', await page.locator('input[name=mode]').count() === 2);
-  check('nowy klient: tryb „poprzednie zasady” niedostępny', await page.locator('input[value=confirm_previous]').isDisabled() && await page.locator('input[value=new_survey]').isChecked());
+  check('kreator ma trzy tryby (poprzednie zasady / wypełnia opiekun / pusta ankieta)', await page.locator('input[name=mode]').count() === 3);
+  check('nowy klient: tryb „poprzednie zasady” niedostępny, domyślnie wypełnia opiekun', await page.locator('input[value=confirm_previous]').isDisabled() && await page.locator('input[value=admin_filled]').isChecked());
+  check('tryb opiekuna: formularz zasad otwarty, „Dalej” zablokowane do zapisu', await page.locator('[data-form="wiz-edit"] .field').count() >= 20 && await page.locator('[data-act="wiz-next"]').isDisabled());
+  await page.click('[data-form="wiz-edit"] button[type=submit]'); await page.waitForTimeout(150);
+  check('tryb opiekuna: po zapisie tabela zasad i odblokowane „Dalej”', await page.locator('.panel.inner table.answers tr').count() === 20 && !(await page.locator('[data-act="wiz-next"]').isDisabled()));
+  await page.click('[data-act="wiz-next"]'); await page.fill('#wiz-email', 'sekretarz@lubawa.pl'); await page.click('[data-form="wiz"] button[type=submit]'); await page.waitForTimeout(250);
+  await page.goto(url + '#klient/2103/podglad'); await page.waitForTimeout(200);
+  check('nowy klient w trybie opiekuna: widok klienta to potwierdzenie gotowych zasad', /Potwierdź zasady/.test(await page.locator('.pubintro h1').innerText()) && /przygotowane przez opiekuna/.test(await page.locator('.panelhead .small').first().innerText()));
   await page.goto(url + '#ustalenie/2101'); await page.waitForTimeout(200);
   check('stały klient: tryb „poprzednie zasady” domyślny, z tabelą zasad', await page.locator('input[value=confirm_previous]').isChecked() && await page.locator('.panel.inner table.answers tr').count() === 20);
   await page.click('[data-act="wiz-edit"]'); await page.waitForTimeout(150);
