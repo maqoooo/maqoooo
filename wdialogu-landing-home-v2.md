@@ -81,6 +81,9 @@ Czat na stronie urzędu i w aplikacji, który zna harmonogram odpadów, stawki p
 > Mieszkaniec: Muszę złożyć deklarację na podatek od nieruchomości za firmę.
 > Asystent: Pomogę wypełnić DN-1 krok po kroku. To pierwsza deklaracja na 2026 rok, czy korekta?
 
+> Mieszkaniec: Gdzie mam zniżkę z Kartą Mieszkańca?
+> Asystent: Dziś najbliżej Ciebie: basen miejski 30% i kino Grunwald 5 zł taniej. Pokaż kartę z aplikacji przy kasie. Pełną listę 38 partnerów masz w zakładce Karta.
+
 Im więcej produktów W Dialogu ma Twój urząd, tym więcej pytań asystent zamyka sam. Zawsze wiadomo, skąd wziął odpowiedź, i zawsze można przejść do człowieka.
 
 **[CTA]** Zobacz asystenta w akcji
@@ -133,7 +136,7 @@ Etykieta: `DLA SEKRETARZA I WÓJTA`
 
 ### Kontakt z Mieszkańcem. Urząd w telefonie, każde zgłoszenie z właścicielem.
 
-Mieszkaniec zgłasza dziurę ze zdjęciem, dostaje alert o awarii wody i widzi ogłoszenia urzędu w jednej aplikacji z herbem gminy. Zgłoszenie trafia automatycznie do właściwego wydziału, ma status i termin. Wójt dostaje w poniedziałek raport, co się działo i jak szybko urząd odpowiedział.
+Mieszkaniec zgłasza dziurę ze zdjęciem, dostaje alert o awarii wody, pokazuje Kartę Mieszkańca na basenie i widzi ogłoszenia urzędu w jednej aplikacji z herbem gminy. Zgłoszenie trafia automatycznie do właściwego wydziału, ma status i termin. Wójt dostaje w poniedziałek raport, co się działo i jak szybko urząd odpowiedział.
 
 **Co jest w środku**
 
@@ -142,6 +145,7 @@ Mieszkaniec zgłasza dziurę ze zdjęciem, dostaje alert o awarii wody i widzi o
 - **Aplikacja mobilna.** Zgłoszenia, harmonogram odpadów, ogłoszenia, alerty, konsultacje i asystent w kieszeni. W barwach i z herbem Twojej gminy.
 - **Ogłoszenia, wydarzenia i newsletter.** Kalendarz urzędu z push jednym kliknięciem, zapisy na warsztaty i spotkania z limitem miejsc, mailingi tematyczne.
 - **Sołectwa i fundusz sołecki.** Strona każdego sołectwa, ogłoszenia sołtysa, terminy zebrań, głosowanie nad funduszem sołeckim, zadania na mapie. Sołtys ma prosty panel na telefonie.
+- **Karta Mieszkańca.** Program zniżek i przywilejów dla osób, które płacą podatki w gminie: basen, komunikacja, kultura, lokalni przedsiębiorcy. Wniosek online z weryfikacją na podstawie konta mieszkańca, karta w aplikacji zamiast plastiku, panel dla partnerów, którzy sami dodają oferty. Mieszkaniec zameldowany gdzie indziej ma powód, żeby rozliczać PIT u Was.
 - **Raport dla wójta.** Jedna strona co poniedziałek: zgłoszenia i czas ich obsługi w podziale na wydziały, alerty, aktywność mieszkańców, najczęstsze pytania do asystenta. Podsumowanie pisze AI.
 - **Asystent Mieszkańca** w zakresie zgłoszeń, ogłoszeń i spraw ogólnych urzędu.
 
@@ -151,6 +155,7 @@ Mieszkaniec zgłasza dziurę ze zdjęciem, dostaje alert o awarii wody i widzi o
 - Żadne zgłoszenie nie ginie między wydziałami.
 - Wójt wie, co się dzieje, bez logowania do panelu.
 - Baza kontaktów do mieszkańców rośnie z każdym alertem i służy wszystkim produktom.
+- Karta Mieszkańca przyciąga do aplikacji także tych, którzy nigdy nie zgłosili dziury, i daje argument za rozliczaniem PIT w gminie.
 
 **[CTA]** Zobacz aplikację i Centrum zgłoszeń
 
@@ -223,7 +228,7 @@ Pod tabelą:
 - Umowa na 24 miesiące: rabat 10%. Na 36 miesięcy: 15%. Stała cena na całą kadencję.
 - Każdy pakiet mieści się poniżej progu zamówień publicznych. Kupujesz z rozeznania rynku, bez przetargu.
 
-**Dodatki:** Przejrzysty budżet (prezentacja budżetu i mapa inwestycji) od 4 900 zł · Karta mieszkańca od 9 900 zł · Kreator e-usług z katalogiem i 30 szablonami od 9 900 zł · Integracja z systemem podatkowym i płatnościami online: wycena · Własna aplikacja w sklepach dla Start i Gminy 6 900 zł
+**Dodatki:** Przejrzysty budżet (prezentacja budżetu i mapa inwestycji) od 4 900 zł · Karta Mieszkańca dla pakietu Start (w Gminie i Mieście w cenie linii Kontakt z Mieszkańcem) od 4 900 zł · Kreator e-usług z katalogiem i 30 szablonami od 9 900 zł · Integracja z systemem podatkowym i płatnościami online: wycena · Własna aplikacja w sklepach dla Start i Gminy 6 900 zł
 
 **[CTA]** Poproś o wycenę dla swojej gminy
 
@@ -297,6 +302,9 @@ Nie. Asystent prowadzi rozmowę i wypełnia formularz. Podatek liczy silnik obli
 **Skąd asystent wie, co odpowiedzieć mieszkańcowi?**
 Tylko z danych Twojego urzędu: harmonogramów, stawek, zgłoszeń, ogłoszeń, konsultacji i treści BIP-u. Każda odpowiedź ma źródło. Gdy nie zna odpowiedzi, mówi to i zamienia pytanie w zgłoszenie do wydziału.
 
+**Czy Karta Mieszkańca wymaga drukowania plastikowych kart?**
+Nie. Karta działa w aplikacji mobilnej i jako kod na wydruku dla osób bez smartfona. Mieszkaniec składa wniosek online, urząd weryfikuje go na podstawie konta mieszkańca i pierwszej strony PIT, a partnerzy sprawdzają ważność jednym skanem. Plastik możesz dodać, jeśli chcesz, ale nie musisz.
+
 **Czy przypomnienia o płatnościach wymagają integracji z naszym systemem podatkowym?**
 Na start nie. Działają na podstawie terminów ustawowych i list wgranych z systemu. Integracja jest dodatkiem i pozwala wysyłać przypomnienia z rzeczywistych sald oraz pokazać mieszkańcowi jego rozliczenia.
 
@@ -323,7 +331,7 @@ Z Twoją mapą, Twoimi ulicami, Twoimi stawkami podatkowymi i pytaniami, które 
 
 **W Dialogu** — urząd, który odpowiada mieszkańcom
 
-Produkty: Podatki i Opłaty · Kontakt z Mieszkańcem · Partycypacja · Asystent Mieszkańca · Pakiety · Dodatki
+Produkty: Podatki i Opłaty · Kontakt z Mieszkańcem · Karta Mieszkańca · Partycypacja · Asystent Mieszkańca · Pakiety · Dodatki
 
 Bezpłatnie: Generator deklaracji dostępności · Skan dostępności strony urzędu
 
