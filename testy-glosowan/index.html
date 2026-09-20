@@ -204,6 +204,47 @@ table.diffs ins{background:var(--ok-bg);color:var(--ok);text-decoration:none;pad
 .pubintro p{color:var(--muted);max-width:65ch}
 @media (max-width:760px){.formgrid{grid-template-columns:1fr}}
 
+/* ---------- asystent (widok klienta) ---------- */
+.tooltabs{display:inline-flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:var(--pill);box-shadow:var(--shadow);margin:0 auto 20px;position:relative;left:50%;transform:translateX(-50%)}
+.tooltabs button{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;padding:9px 18px;border-radius:var(--pill);font-weight:500;color:var(--muted);cursor:pointer}
+.tooltabs button svg{width:16px;height:16px}
+.tooltabs button[aria-selected="true"]{background:var(--primary);color:#fff}
+.tooltabs button:not([aria-selected="true"]):hover{background:var(--tint);color:var(--accent-text)}
+.chat{max-width:720px;width:100%;min-width:0;margin-inline:auto;display:grid;gap:14px}
+.chat>*{min-width:0}
+.chips-row{flex-wrap:wrap}
+.chip{white-space:normal}
+.chat-empty{text-align:center;padding:24px 8px 8px;display:grid;gap:10px;justify-items:center}
+.chat-empty p{max-width:52ch}
+.chat-progress{display:flex;align-items:center;gap:12px;font-size:.8125rem;color:var(--muted)}
+.chat-progress .bar{flex:1;height:6px;border-radius:var(--pill);background:var(--line);overflow:hidden}
+.chat-progress .bar span{display:block;height:100%;background:var(--primary);transition:width .25s}
+.chat-log{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto;padding:4px 2px}
+.msg{max-width:85%;padding:10px 14px;border-radius:16px;line-height:1.5;display:grid;gap:8px;white-space:pre-line}
+.msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px}
+.msg.user{align-self:flex-end;background:var(--tint);color:var(--ink-strong);border-bottom-right-radius:6px}
+.msg .saved{display:inline-flex;align-items:center;gap:6px;justify-self:start;padding:3px 10px;border-radius:var(--pill);background:var(--ok-bg);color:var(--ok);font-size:.75rem;font-weight:600;white-space:normal}
+.msg .saved svg{width:12px;height:12px;flex-shrink:0}
+.composer{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:6px 8px 8px;box-shadow:var(--shadow-lift,var(--shadow))}
+.composer .row{display:flex;align-items:center;gap:12px;padding:8px 10px}
+.composer .ico{width:28px;height:28px;border-radius:9px;background:var(--tint);color:var(--accent-text);display:grid;place-items:center;flex-shrink:0}
+.composer .ico svg{width:15px;height:15px}
+.composer input{flex:1;min-width:0;border:0;background:transparent;min-height:36px;padding:0;font-size:1rem}
+.composer input:focus-visible{box-shadow:none;outline:none}
+.composer:focus-within{border-color:var(--primary);box-shadow:var(--focus)}
+.chips-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 8px 2px;border-top:1px solid var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--pill);border:1px solid var(--line-strong);background:var(--surface);color:var(--accent-text);font-size:.8125rem;font-weight:500;cursor:pointer;max-width:100%;text-align:left}
+.chip:hover{background:var(--tint);border-color:var(--primary)}
+.chip span{color:var(--muted)}
+.sendbtn{flex:0 0 42px;width:42px;height:42px;border:0;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;cursor:pointer}
+.sendbtn:hover{background:var(--primary-hover)}
+.sendbtn svg{width:18px;height:18px}
+.center{text-align:center;margin:0}
+.linkbtn{background:none;border:0;padding:6px 10px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit;font-size:.8125rem}
+.linkbtn:hover{color:var(--accent-text)}
+@media (max-width:760px){.msg{max-width:95%}.chat-log{max-height:none}}
+
 /* ---------- dialog ---------- */
 dialog{border:0;border-radius:var(--radius);padding:0;max-width:600px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(0,0,0,.25);color:var(--ink)}
 dialog::backdrop{background:rgba(15,34,41,.5)}
@@ -506,7 +547,8 @@ const badge=(def,extra='')=>`<span class="badge ${def.cls}">${icon(def.ico)}${E(
    ============================================================ */
 let view='lista',currentId=null,tab='Klient';
 let wiz=null;            // stan kreatora „Ustalenie”
-let pub={editing:false,review:false,draft:null}; // stan widoku klienta
+const freshPub=()=>({editing:false,review:false,draft:null,tool:null,chat:null}); // tool: 'chat' | 'form'
+let pub=freshPub(); // stan widoku klienta
 let startWindow='all',sort={key:'start',dir:1};
 
 /* ============================================================
@@ -829,7 +871,7 @@ function renderPublic(a){
   const vals=pub.draft||base;
   const editing=!locked&&!pub.review&&(pub.editing||mode==='new_survey');
   const prevEd=String(Number(a.edition)-1);
-  const title=locked?'Dziękujemy za potwierdzenie':expired?'Link wygasł':editing?'Ustalmy zasady głosowania':pub.review?'Sprawdź odpowiedzi':'Potwierdź zasady głosowania';
+  const title=locked?'Dziękujemy za potwierdzenie':expired?'Link wygasł':editing?(pub.tool==='chat'||(!pub.tool&&mode==='new_survey')?'Ustalmy zasady głosowania razem':'Ustalmy zasady głosowania'):pub.review?'Sprawdź odpowiedzi':'Potwierdź zasady głosowania';
   const changedVsBase=pub.draft&&a.proposed?changedFields(pub.draft,a.proposed):[];
   const rulesTable=(v,mark)=>`<div class="tablewrap"><table class="answers"><tbody>${SURVEY.fields.map(([k,l])=>{const ch=mark&&mark.includes(k);return `<tr class="${ch?'changed':''}"><td class="lbl">${E(l)}</td><td>${E(fmtAnswer(k,v))}${ch?`<span class="tag-changed">zmienione</span>`:''}</td></tr>`}).join('')}</tbody></table></div>`;
   let body='';
@@ -838,10 +880,14 @@ function renderPublic(a){
     <div class="notice ok">${icon('check')}<div>Potwierdzone ${E(a.evidence.at)} przez ${E(a.evidence.name)} (${E(a.evidence.position)}). Kopia potwierdzenia została wysłana e-mailem${a.sentTo?' na '+E(a.sentTo):''}.</div></div>
     <section class="panel"><div class="panelhead"><h2>Potwierdzone zasady · v${a.answersVersion}</h2><button type="button" class="btn sm" data-act="toast" data-msg="Drukowanie / PDF — w makiecie tylko podgląd.">${icon('file')}PDF / drukuj</button></div><div class="panelbody">${rulesTable(a.answers)}</div></section>
     <section class="panel"><div class="panelbody"><h3>Dowód potwierdzenia</h3><p class="small muted" style="margin:8px 0">${E(a.evidence.name)} · ${E(a.evidence.position)} · ${E(a.evidence.organization)}</p><p class="small">${E(a.evidence.hash)}</p></div></section>`}
-  else if(editing){body=`
-    <section class="panel"><div class="panelhead"><h2>Zasady głosowania</h2><span class="small muted">${mode==='confirm_previous'?'Zmień tylko to, co różni się od poprzedniej edycji':'Wypełnij wszystkie pola'}</span></div>
-      <form class="panelbody" data-form="pub-edit">${answersForm(vals,'p')}
-      <div class="formactions">${mode==='confirm_previous'?`<button type="button" class="btn ghost" data-act="pub-cancel">${icon('back')}Wróć do zasad</button>`:'<span class="small muted">Odpowiedzi sprawdzisz przed wysłaniem.</span>'}<button type="submit" class="btn primary">Sprawdź odpowiedzi ${icon('arrow')}</button></div></form></section>`}
+  else if(editing){
+    if(!pub.tool)pub.tool=mode==='new_survey'?'chat':'form';
+    const tabs=`<div class="tooltabs" role="tablist" aria-label="Sposób wypełnienia"><button type="button" role="tab" aria-selected="${pub.tool==='chat'}" data-act="pub-tool-chat">${icon('mail')}Asystent</button><button type="button" role="tab" aria-selected="${pub.tool==='form'}" data-act="pub-tool-form">${icon('file')}Formularz</button></div>`;
+    const formVals=pub.chat?{...vals,...pub.chat.cur}:vals; // to, co zebrał asystent, przechodzi do formularza
+    body=tabs+(pub.tool==='chat'?renderChat(a,vals):`
+    <section class="panel"><div class="panelhead"><h2>Zasady głosowania</h2><span class="small muted">${mode==='confirm_previous'||mode==='admin_filled'?'Zmień tylko to, co ma być inaczej':'Wypełnij wszystkie pola'}</span></div>
+      <form class="panelbody" data-form="pub-edit">${answersForm(formVals,'p')}
+      <div class="formactions">${mode!=='new_survey'?`<button type="button" class="btn ghost" data-act="pub-cancel">${icon('back')}Wróć do zasad</button>`:'<span class="small muted">Odpowiedzi sprawdzisz przed wysłaniem.</span>'}<button type="submit" class="btn primary">Sprawdź odpowiedzi ${icon('arrow')}</button></div></form></section>`)}
   else{body=`
     <section class="panel"><div class="panelhead"><h2>${pub.review?'Twoje odpowiedzi':'Zasady do potwierdzenia'}</h2><span class="small muted">${pub.review?(changedVsBase.length?`${changedVsBase.length} ${plural(changedVsBase.length,'pole zmienione','pola zmienione','pól zmienionych')}`:'bez zmian'):mode==='admin_filled'?'przygotowane przez opiekuna MediaPark':`na podstawie edycji ${prevEd}`}</span></div><div class="panelbody">${rulesTable(vals,pub.review?changedVsBase:null)}</div></section>
     ${pub.review?'':`<div class="actions" style="margin-bottom:20px"><button type="button" class="btn" data-act="pub-edit">${icon('edit')}Chcę wprowadzić zmiany</button></div>`}
@@ -874,7 +920,120 @@ function confirmFromPublic(a,form){
   a.evidence={name:`${fd.get('first')} ${fd.get('last')}`.trim(),position:fd.get('position'),organization:orgNameOf(a),email:fd.get('email'),at:now(),choice,version:v,hash:'SHA-256 · '+Math.random().toString(16).slice(2,8)+'…demo'};
   addEvent(a,`Klient potwierdził zasady (v${v})${choice==='changes'?' — wybrał „Chcę wprowadzić zmiany”':choice==='confirm'?' bez zmian':''}${v>1?' — poprzednie odpowiedzi nadpisane':''}`,a.evidence.name);
   if(v>1)addEvent(a,prevNote,'system');
-  pub={editing:false,review:false,draft:null};render();toast(prevNote+'.');
+  pub=freshPub();render();toast(prevNote+'.');
+}
+
+
+/* ============================================================
+   ASYSTENT WYPEŁNIANIA ANKIETY (widok klienta)
+   Każdy slot: pytanie, podpowiedzi (chips), parser zwykłego języka → fragment odpowiedzi + etykieta „zapisane”.
+   ============================================================ */
+const norm=t=>String(t||'').toLowerCase().replace(/ą/g,'a').replace(/ć/g,'c').replace(/ę/g,'e').replace(/ł/g,'l').replace(/ń/g,'n').replace(/ó/g,'o').replace(/ś/g,'s').replace(/[źż]/g,'z');
+const firstNum=t=>{const m=String(t).replace(/\s/g,'').match(/(\d+)/);return m?Number(m[1]):null};
+const yes=t=>/^\s*(tak|owszem|jest|zbieramy|haszuj|chce|wlacz)/.test(norm(t))||/\btak\b/.test(norm(t))&&!/\bnie\b/.test(norm(t));
+const no=t=>/\b(nie|brak|bez|zaden|zadnych|pomin)/.test(norm(t));
+const splitList=t=>String(t).split(/[;,\n]+|\s+i\s+/).map(x=>x.trim()).filter(Boolean);
+function parseDate(str){const m=String(str).match(/(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})(?:[\s,]+(\d{1,2})[:.](\d{2}))?/);if(!m)return null;const [,d,mo,y,h,mi]=m;return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}T${(h||'00').padStart(2,'0')}:${mi||'00'}`}
+function assistantSlots(a,cur){
+  return [
+    {id:'dates',keys:['date_start','date_end'],ask:'Zaczynamy od terminu. Kiedy trwa głosowanie? Podaj daty od–do, np. „18.09.2026 – 27.09.2026 23:59”.',
+      chips:[`${fmtDate(a.start)} ${fmtTime(a.start)} – ${fmtDate(a.end)} ${fmtTime(a.end)}`],
+      parse:t=>{const parts=String(t).split(/\s[–-]\s|\sdo\s|—/);if(parts.length<2)return null;const ds=parseDate(parts[0]),de=parseDate(parts[1]);if(!ds||!de)return null;if(de<=ds)return {error:'Data zakończenia musi być późniejsza niż rozpoczęcia.'};const p={date_start:ds,date_end:de.endsWith('T00:00')?de.replace('T00:00','T23:59'):de};return {patch:p,saved:`Głosowanie: ${fmtDate(p.date_start)} ${fmtTime(p.date_start)} – ${fmtDate(p.date_end)} ${fmtTime(p.date_end)}`}},
+      retry:'Potrzebuję dwóch dat w formacie dd.mm.rrrr, np. „18.09.2026 – 27.09.2026”. Godzinę możesz dopisać po dacie.'},
+    {id:'channel',keys:['channel'],ask:'W jakiej formie odbywa się głosowanie?',chips:['Tylko elektroniczne','Elektroniczne i papierowe'],
+      parse:t=>{const s=norm(t);const v=/papier|karty|urn/.test(s)?'electronic_paper':/elektron|online|internet|tylko/.test(s)?'electronic':null;return v?{patch:{channel:v},saved:'Forma: '+OPT.channel[v]}:null},retry:'Napisz „tylko elektroniczne” albo „elektroniczne i papierowe”.'},
+    {id:'votes',keys:['allocation_method','max_votes_total'],ask:'Ile głosów ma mieszkaniec i jak je rozdziela?',chips:['3 głosy na dowolne projekty','1 głos w każdej kategorii','Dowolny podział punktów'],
+      parse:t=>{const s=norm(t);const n=firstNum(t);let method=/kategori/.test(s)?'per_category':/punkt/.test(s)?'free_points':/koszyk|budzet/.test(s)?'budget_basket':'votes_per_project';if(method==='votes_per_project'&&!n)return null;const p={allocation_method:method,max_votes_total:n||(method==='per_category'?3:10)};return {patch:p,saved:'Głosy: '+fmtAnswer('allocation_method',{...cur,...p})}},
+      retry:'Napisz np. „3 głosy na dowolne projekty” albo „1 głos w każdej kategorii”.'},
+    {id:'categories',keys:['categories'],ask:'Jakie są kategorie projektów? Wypisz je po przecinku.',chips:['inwestycyjne, społeczne','inwestycyjne, społeczne, zielone','Bez kategorii'],
+      parse:t=>{if(no(t)&&!/,/.test(t))return {patch:{categories:['ogólne']},saved:'Kategorie: bez podziału (jedna pula)'};const l=splitList(t);return l.length?{patch:{categories:l},saved:'Kategorie: '+l.join(' / ')}:null},retry:'Wypisz kategorie po przecinku, np. „inwestycyjne, społeczne”.'},
+    {id:'voter_fields',keys:['voter_fields'],ask:'Jakie dane podaje mieszkaniec na karcie do głosowania? Wypisz po przecinku.',chips:['imię, nazwisko, PESEL, telefon','imię, nazwisko, ulica, nr budynku, nr lokalu, telefon'],
+      parse:t=>{const l=splitList(t).map(x=>/pesel/i.test(x)?'PESEL':x.toLowerCase());return l.length>=2?{patch:{voter_fields:l},saved:'Na karcie: '+l.join(', ')}:null},retry:'Podaj co najmniej dwa pola, np. „imię, nazwisko, PESEL”.'},
+    {id:'eligibility',keys:['eligibility_check'],ask:'Jak sprawdzamy, czy głosujący jest mieszkańcem?',chips:['Baza mieszkańców (PESEL)','Po adresie (lista ulic)','Bez weryfikacji — oświadczenie'],
+      parse:t=>{const s=norm(t);const v=/baz|pesel|ewidenc/.test(s)?'residents_db':/adres|ulic/.test(s)?'address_list':/oswiadcz|bez|brak|nie/.test(s)?'none':null;return v?{patch:{eligibility_check:v},saved:'Weryfikacja: '+OPT.eligibility_check[v]}:null},retry:'Wybierz: baza mieszkańców, po adresie albo bez weryfikacji.'},
+    {id:'duplicate',keys:['duplicate_policy'],ask:'Co robimy, gdy ktoś odda drugi głos na te same dane?',chips:['Pierwszy głos ważny, reszta nieważna','Wszystkie głosy nieważne'],
+      parse:t=>{const s=norm(t);const v=/pierwsz|zostaje|liczy/.test(s)?'first_valid':/wszystk|niewazn|anul/.test(s)?'all_invalid':null;return v?{patch:{duplicate_policy:v},saved:'Duplikat: '+OPT.duplicate_policy[v]}:null},retry:'Napisz „pierwszy głos ważny” albo „wszystkie nieważne”.'},
+    {id:'sms',keys:['sms_verification','sms_per_phone_limit'],ask:'Czy głos potwierdzamy kodem SMS? Jeśli tak — ile głosów może paść z jednego numeru?',chips:['Tak, 1 głos na numer','Tak, 2 głosy na numer','Bez SMS'],
+      parse:t=>{if(no(t)&&!/tak/.test(norm(t)))return {patch:{sms_verification:false,sms_per_phone_limit:null},saved:'Weryfikacja SMS: nie'};const n=firstNum(t)||1;return {patch:{sms_verification:true,sms_per_phone_limit:n},saved:`Weryfikacja SMS: tak, ${n} ${plural(n,'głos','głosy','głosów')} na numer`}}},
+    {id:'sms_unlimited',keys:['sms_unlimited_numbers'],ask:'Czy jakieś numery telefonu mają być bez limitu SMS (np. punkt w urzędzie)? Podaj po przecinku albo napisz „brak”.',chips:['Brak'],
+      parse:t=>{if(no(t))return {patch:{sms_unlimited_numbers:[]},saved:'Numery bez limitu: nie dotyczy'};const l=splitList(t).filter(x=>/\d{3}/.test(x));return l.length?{patch:{sms_unlimited_numbers:l},saved:'Numery bez limitu: '+l.join(', ')}:null},retry:'Podaj numery telefonu po przecinku albo napisz „brak”.',skipIf:c=>c.sms_verification===false},
+    {id:'ip',keys:['ip_limit'],ask:'Czy ograniczamy liczbę głosów z jednego adresu IP?',chips:['Brak limitu','10 głosów','50 głosów'],
+      parse:t=>{if(no(t))return {patch:{ip_limit:null},saved:'Limit z IP: brak deklaracji'};const n=firstNum(t);return n?{patch:{ip_limit:n},saved:`Limit z IP: ${n}`}:null},retry:'Podaj liczbę głosów albo napisz „brak limitu”.'},
+    {id:'age',keys:['age_rule','min_age'],ask:'Kto może głosować ze względu na wiek?',chips:['Każdy mieszkaniec, bez limitu wieku','Od 16 lat, młodsi za zgodą rodzica','Od 18 lat'],
+      parse:t=>{const s=norm(t);const n=firstNum(t);if(/bez limit|kazdy|wszyscy|brak/.test(s)&&!n)return {patch:{age_rule:/zgod/.test(s)?'no_limit_parent_consent':'no_limit',min_age:null},saved:'Wiek: '+OPT.age_rule[/zgod/.test(s)?'no_limit_parent_consent':'no_limit']};if(!n)return null;const rule=/zgod|rodzic|mlodsz/.test(s)?'min_age_parent_consent':'min_age';return {patch:{age_rule:rule,min_age:n},saved:'Wiek: '+fmtAnswer('age_rule',{...cur,age_rule:rule,min_age:n})}},retry:'Napisz np. „od 16 lat, młodsi za zgodą rodzica” albo „bez limitu wieku”.'},
+    {id:'pesel',keys:['pesel_hashed'],ask:'Czy numer PESEL ma być zapisywany w postaci zahaszowanej (nieodwracalnej)?',chips:['Tak, haszować','Nie, zapis jawny'],
+      parse:t=>{const v=!no(t)||yes(t);return {patch:{pesel_hashed:v},saved:'Haszowanie PESEL: '+(v?'tak':'nie')}},skipIf:c=>!(c.voter_fields||[]).includes('PESEL')},
+    {id:'clause',keys:['info_clause'],ask:'Klauzula informacyjna RODO: zostaje z poprzedniego roku czy będzie nowa?',chips:['Zostaje z poprzedniego roku','Nowa — prześlemy treść'],
+      parse:t=>{const s=norm(t);const v=/now|zmien|przesl/.test(s)?'new':/zosta|poprzedni|ta sama|bez zmian/.test(s)?'previous_year':null;return v?{patch:{info_clause:v},saved:'Klauzula: '+OPT.info_clause[v]}:null},retry:'Napisz „zostaje” albo „nowa”.'},
+    {id:'agreements',keys:['agreements'],ask:'Jakie oświadczenia zaznacza głosujący? Wpisz każde jako osobne zdanie, oddziel średnikiem.',chips:[`Oświadczam, że jestem mieszkanką/mieszkańcem ${orgNameOf(a).replace(/^Urząd /,'')}.`],
+      parse:t=>{const l=String(t).split(/;|\n/).map(x=>x.trim()).filter(x=>x.length>5);return l.length?{patch:{agreements:l},saved:l.length+' '+plural(l.length,'oświadczenie','oświadczenia','oświadczeń')}:null},retry:'Wpisz treść oświadczenia, np. „Oświadczam, że jestem mieszkańcem gminy.”'},
+    {id:'postal',keys:['postal_code_on_card'],ask:'Czy zbieramy kod pocztowy na karcie?',chips:['Nie','Tak'],parse:t=>{const v=yes(t)&&!no(t);return {patch:{postal_code_on_card:v},saved:'Kod pocztowy: '+(v?'zbieramy':'nie zbieramy')}}},
+    {id:'renumber',keys:['project_renumbering'],ask:'Jak numerujemy projekty na liście do głosowania?',chips:['Wg statusu, potem numeru','Losowanie','Alfabetycznie','Bez zmian'],
+      parse:t=>{const s=norm(t);const v=/los/.test(s)?'lottery':/alfabet/.test(s)?'alphabetical':/status/.test(s)?'status_then_number':/dat|zloz/.test(s)?'submission_date':/bez|nie|zosta/.test(s)?'none':null;return v?{patch:{project_renumbering:v},saved:'Numeracja: '+OPT.project_renumbering[v]}:null},retry:'Wybierz: wg statusu, losowanie, alfabetycznie albo bez zmian.'},
+    {id:'year',keys:['edition_year_label'],ask:'Jaki rok edycji ma widnieć w treściach (karta, slogan, zgoda rodzica)?',chips:[a.edition,String(Number(a.edition)+1)],
+      parse:t=>{const m=String(t).match(/20\d\d/);return m?{patch:{edition_year_label:m[0]},saved:'Rok edycji: '+m[0]}:null},retry:'Podaj rok czterocyfrowo, np. 2026.'},
+    {id:'warn',keys:['incomplete_categories_warning'],ask:'Ostatnie pytanie: ostrzegać głosującego przed wysłaniem, gdy nie wybrał projektu w każdej kategorii?',chips:['Tak — ostrzeżenie','Nie'],
+      parse:t=>{const v=!no(t)||yes(t);return {patch:{incomplete_categories_warning:v},saved:'Komunikat: '+(v?'tak — ostrzeżenie przed wysłaniem':'nie')}}},
+  ].map(sl=>{const label=c=>sl.id==='dates'?`${fmtDate(c.date_start)} ${fmtTime(c.date_start)} – ${fmtDate(c.date_end)} ${fmtTime(c.date_end)}`:fmtAnswer(sl.keys[0],c);return {...sl,label,keep:()=>({patch:{},saved:'Bez zmian: '+label(cur)})}});
+}
+function chatStart(a,base){
+  const cur=JSON.parse(JSON.stringify(base||{}));
+  pub.chat={messages:[],slot:0,cur,hasBase:!!(base&&base.channel),done:false};
+  pub.tool='chat';
+}
+function chatCurrentSlot(a){
+  const c=pub.chat;const slots=assistantSlots(a,c.cur);
+  while(c.slot<slots.length&&slots[c.slot].skipIf&&slots[c.slot].skipIf(c.cur)){
+    // pomijany slot dostaje wartość neutralną
+    const sl=slots[c.slot];if(sl.id==='pesel')c.cur.pesel_hashed=true;if(sl.id==='sms_unlimited')c.cur.sms_unlimited_numbers=[];c.slot++;
+  }
+  return slots[c.slot]||null;
+}
+function chatAsk(a){ // dopisuje pytanie bieżącego slotu (jeśli ostatnia wiadomość nie jest pytaniem)
+  const c=pub.chat;const sl=chatCurrentSlot(a);
+  if(!sl){if(!c.done){c.done=true;c.messages.push({role:'bot',text:'Gotowe — mam wszystko, czego potrzebuję. Sprawdź podsumowanie i potwierdź zasady oświadczeniem.'})}return}
+  const last=c.messages[c.messages.length-1];
+  if(!last||last.role!=='bot'||last.slot!==sl.id){c.messages.push({role:'bot',text:sl.ask+(c.hasBase?` Obecnie: ${sl.label(c.cur)}.`:''),slot:sl.id})}
+}
+function chatSend(a,text){
+  const c=pub.chat;text=String(text||'').trim();if(!text)return;
+  const sl=chatCurrentSlot(a);
+  c.messages.push({role:'user',text});
+  if(!sl){c.messages.push({role:'bot',text:'Mam już komplet odpowiedzi. Kliknij „Sprawdź odpowiedzi”, żeby przejść do podsumowania.'});render();return}
+  let res;
+  if(c.hasBase&&/^(bez zmian|zostaw|dalej|ok|tak jak jest|bez zmian:)/.test(norm(text)))res=sl.keep();
+  else res=sl.parse(text);
+  if(!res){c.messages.push({role:'bot',text:sl.retry||'Nie zrozumiałem — spróbuj inaczej albo wybierz podpowiedź.',slot:sl.id});render();return}
+  if(res.error){c.messages.push({role:'bot',text:res.error,slot:sl.id});render();return}
+  Object.assign(c.cur,res.patch||{});
+  c.messages[c.messages.length-1].saved=res.saved;
+  c.slot++;chatAsk(a);render();
+}
+function renderChat(a,base){
+  if(!pub.chat)chatStart(a,base);
+  const c=pub.chat;const slots=assistantSlots(a,c.cur);const total=slots.filter(s=>!(s.skipIf&&s.skipIf(c.cur))).length;
+  const answered=Math.min(c.slot,total);
+  const started=c.messages.length>0;
+  if(started)chatAsk(a);
+  const sl=chatCurrentSlot(a);
+  const chips=started?(c.done?[]:[...(c.hasBase?[`Bez zmian: ${sl.label(c.cur)}`]:[]),...sl.chips]):[];
+  return `
+  <section class="chat">
+    ${!started?`<div class="chat-empty"><h2>W czym mogę pomóc?</h2><p class="muted">Zadam do ${slots.length} pytań o zasady głosowania, po jednym. Odpowiadaj zwykłym językiem albo klikaj podpowiedzi — każdą odpowiedź zapiszę do ankiety.</p><div class="actions" style="justify-content:center"><button type="button" class="btn primary" data-act="chat-begin">${icon('play')}Zaczynamy</button></div></div>`:`
+    <div class="chat-progress"><span>Odpowiedzi: <strong class="num">${answered}</strong> z ${total}</span><span class="bar" aria-hidden="true"><span style="width:${Math.round(answered/total*100)}%"></span></span></div>
+    <div class="chat-log" role="log" aria-live="polite" id="chat-log">
+      ${c.messages.map(m=>`<div class="msg ${m.role}"><span>${E(m.text)}</span>${m.saved?`<span class="saved">${icon('check')}${E(m.saved)}</span>`:''}</div>`).join('')}
+    </div>`}
+    ${started&&!c.done?`
+    <form class="composer" data-form="chat">
+      <div class="row"><span class="ico" aria-hidden="true">${icon('mail')}</span><input id="chat-input" type="text" name="text" autocomplete="off" placeholder="${E(c.hasBase?'Napisz nową wartość albo „bez zmian”…':'Napisz odpowiedź…')}" aria-label="Napisz odpowiedź do asystenta"></div>
+      <div class="chips-row"><div class="chips">${chips.map(ch=>`<button type="button" class="chip" data-chip="${E(ch)}">${E(ch)}<span aria-hidden="true">›</span></button>`).join('')}</div><button type="submit" class="sendbtn" aria-label="Wyślij">${icon('arrow')}</button></div>
+    </form>
+    <p class="small muted center">Naciśnij Enter, aby wysłać. Możesz pisać zwykłym językiem.</p>`:''}
+    ${c.done?`<div class="actions" style="justify-content:center;margin-top:16px"><button type="button" class="btn primary" data-act="chat-review">Sprawdź odpowiedzi ${icon('arrow')}</button><button type="button" class="btn" data-act="pub-tool-form">Otwórz formularz</button></div>`:''}
+    <p class="small muted center">Asystent nie wysyła ankiety — przygotowuje odpowiedzi, które zatwierdzasz w podsumowaniu.</p>
+    ${!c.done?`<p class="center"><button type="button" class="linkbtn" data-act="pub-tool-form">Wolę wypełnić klasyczny formularz</button></p>`:''}
+  </section>`;
 }
 
 /* ============================================================
@@ -886,14 +1045,14 @@ function render(){
   if(view!=='lista'&&!a){location.hash='#lista';return}
   if(view==='klient'){main.innerHTML=renderDetail(a);document.title=a.client+' — Testy głosowań';}
   else if(view==='ustalenie'){main.innerHTML=renderWiz(a);document.title='Ustalenie · '+a.client+' — Testy głosowań';}
-  else if(view==='podglad'){main.innerHTML=renderPublic(a);document.title='Widok klienta · '+a.client+' — Testy głosowań';}
+  else if(view==='podglad'){main.innerHTML=renderPublic(a);document.title='Widok klienta · '+a.client+' — Testy głosowań';const inp=document.getElementById('chat-input');if(inp){inp.focus({preventScroll:true});const log=document.getElementById('chat-log');if(log)log.scrollTop=log.scrollHeight;}}
   else{main.innerHTML=renderList();document.title='Testy głosowań — MediaPark — makieta';}
 }
 function route(){
   const h=location.hash.replace('#','')||'lista';
   const [v,id,t]=h.split('/');
   const prev=view;
-  if(v==='klient'&&id&&t==='podglad'){view='podglad';currentId=Number(id);if(prev!=='podglad')pub={editing:false,review:false,draft:null};}
+  if(v==='klient'&&id&&t==='podglad'){view='podglad';currentId=Number(id);if(prev!=='podglad')pub=freshPub();}
   else if(v==='klient'&&id){view='klient';currentId=Number(id);if(t)tab=decodeURIComponent(t);}
   else if(v==='ustalenie'&&id){view='ustalenie';if(Number(id)!==currentId||prev!=='ustalenie')wiz=null;currentId=Number(id);}
   else{view='lista';}
@@ -925,8 +1084,9 @@ dlg.addEventListener('click',e=>{if(e.target.closest('[data-close]'))dlg.close()
 document.addEventListener('click',e=>{
   const srt=e.target.closest('[data-sort]');if(srt){const k=srt.dataset.sort;if(sort.key===k)sort.dir*=-1;else sort={key:k,dir:1};render();return}
   const tb=e.target.closest('[data-tab]');if(tb){tab=tb.dataset.tab;location.hash=`#klient/${currentId}/${encodeURIComponent(tab)}`;return}
+  const chip=e.target.closest('[data-chip]');if(chip){chatSend(byId(currentId),chip.dataset.chip);return}
   const b=e.target.closest('[data-act]');if(!b)return;
-  const a=b.dataset.id?byId(b.dataset.id):null;
+  const a=b.dataset.id?byId(b.dataset.id):byId(currentId);
   switch(b.dataset.act){
     case 'window-all':startWindow='all';render();break;
     case 'reset':if(confirm('Przywrócić dane przykładowe? Twoje zmiany w makiecie zostaną usunięte.')){localStorage.removeItem(VERSION);S=seed();render();toast('Dane przykładowe przywrócone.')}break;
@@ -946,7 +1106,11 @@ document.addEventListener('click',e=>{
     case 'wiz-edit-reset':{const a2=byId(currentId);wiz.proposed=newWiz(a2).proposed;wiz.edit=false;render();toast('Przywrócono zasady źródłowe.');break}
     // widok klienta
     case 'pub-edit':pub.editing=true;pub.review=false;render();break;
-    case 'pub-cancel':pub.editing=false;pub.review=false;pub.draft=null;render();break;
+    case 'pub-tool-chat':pub.tool='chat';render();break;
+    case 'pub-tool-form':pub.tool='form';render();break;
+    case 'chat-begin':{const a2=byId(currentId);pub.chat.messages=[];pub.chat.slot=0;chatAsk(a2);render();setTimeout(()=>document.getElementById('chat-input')?.focus(),30);break}
+    case 'chat-review':pub.draft={...(a.proposed||{}),...pub.chat.cur};pub.editing=false;pub.review=true;render();window.scrollTo({top:0});break;
+    case 'pub-cancel':pub.editing=false;pub.review=false;pub.draft=null;pub.tool=null;render();break;
   }
 });
 // Zmiana trybu w kreatorze — natychmiast przerysuj krok 1.
@@ -965,6 +1129,7 @@ document.addEventListener('submit',e=>{
     sendFromWiz(a);return}
   if(kind==='pub-edit'){pub.draft=answersFromForm(f);pub.editing=false;pub.review=true;render();window.scrollTo({top:0});return}
   if(kind==='pub-confirm'){confirmFromPublic(a,f);return}
+  if(kind==='chat'){const v=f.text.value;chatSend(a,v);return}
 });
 
 /* ============================================================

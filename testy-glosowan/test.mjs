@@ -123,6 +123,22 @@ for (const width of [1440, 390]) {
   check('po potwierdzeniu: „Dziękujemy za potwierdzenie” i zablokowane zasady v1', /Dziękujemy/.test(await page.locator('.pubintro h1').innerText()) && /v1/.test(await page.locator('.public h2').first().innerText()));
   await page.goto(url + '#klient/2101/Klient'); await page.waitForTimeout(200);
   check('karta klienta po potwierdzeniu: odpowiedzi kanoniczne i zmiany względem 2025', /Odpowiedzi klienta/.test(await page.locator('[role=tabpanel] h2').first().innerText()) && await page.locator('table.diffs').count() === 1);
+
+  // asystent wypełniania ankiety (widok klienta, pusta ankieta)
+  await page.goto(url + '#lista'); await page.waitForTimeout(100); await page.goto(url + '#klient/2112/podglad'); await page.waitForTimeout(200);
+  check('pusta ankieta: przełącznik Asystent / Formularz, domyślnie Asystent', await page.locator('.tooltabs button').count() === 2 && /Asystent/.test(await page.locator('.tooltabs [aria-selected=true]').innerText()));
+  check('asystent: ekran startowy z „W czym mogę pomóc?” i linkiem do formularza', await page.locator('.chat-empty h2').count() === 1 && await page.locator('.linkbtn', { hasText: 'klasyczny formularz' }).count() === 1);
+  await page.click('[data-act="chat-begin"]'); await page.waitForTimeout(150);
+  check('asystent: pierwsze pytanie i podpowiedź z datami głosowania', await page.locator('.msg.bot').count() === 1 && await page.locator('.chip').count() >= 1);
+  await page.locator('.chip').first().click(); await page.waitForTimeout(120);
+  await page.fill('#chat-input', 'tylko elektroniczne'); await page.press('#chat-input', 'Enter'); await page.waitForTimeout(120);
+  check('asystent: odpowiedzi zapisane ze znacznikiem „✓”', await page.locator('.msg .saved').count() === 2 && /Forma: tylko elektroniczne/.test(await page.locator('.msg .saved').last().innerText()));
+  await page.fill('#chat-input', 'bla bla'); await page.press('#chat-input', 'Enter'); await page.waitForTimeout(120);
+  check('asystent: niezrozumiana odpowiedź → podpowiedź bez powtórzenia pytania', /np\./.test(await page.locator('.msg.bot').last().innerText()) && await page.locator('.msg.bot').count() === 4);
+  await page.click('[data-act="pub-tool-form"]'); await page.waitForTimeout(150);
+  check('przełączenie na formularz przenosi odpowiedzi asystenta', await page.inputValue('#p-channel') === 'electronic' && (await page.inputValue('#p-date_start')).startsWith('2026-09-28'));
+  await page.click('[data-act="pub-tool-chat"]'); await page.waitForTimeout(150);
+  check('powrót do asystenta zachowuje rozmowę', await page.locator('.msg').count() >= 5);
   await page.evaluate(() => localStorage.clear());
 
   check('brak błędów w konsoli po interakcjach', errors.length === 0, errors.join(' | '));
