@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>BO Flows — edytor przebiegu weryfikacji</title>
+<meta name="description" content="Edytor przepływu weryfikacji projektów budżetu obywatelskiego. Płótno z węzłami, biblioteka klocków procesu, eksport do generatora mapy.">
+<style>
+:root{
+  --bg:#0b0b0e; --surface:#141418; --surface-2:#1b1b21; --surface-3:#232329;
+  --line:#2a2a32; --line-2:#35353f;
+  --text:#ececf1; --muted:#8b8b99; --faint:#5c5c69;
+  --accent:#7c5cff; --accent-soft:#2a2150; --accent-dim:#9d86ff;
+  --ok:#35c98a; --warn:#e5a53b; --err:#f2545b;
+  --grid:#1e1e25;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);overflow:hidden;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#31313a;border-radius:9px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ── topbar ───────────────────────────────── */
+.topbar{height:52px;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--line);position:relative;z-index:40}
+.brand{display:flex;align-items:center;gap:9px;padding-right:12px;border-right:1px solid var(--line);margin-right:2px}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#4d3ad6);display:grid;place-items:center;font-size:.58rem;font-weight:900;letter-spacing:.03em}
+.brand b{font-size:.86rem;font-weight:700;letter-spacing:-.01em}
+.flow-name{background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 9px;font-weight:650;font-size:.88rem;min-width:220px;outline:none}
+.flow-name:hover{border-color:var(--line)}
+.flow-name:focus{border-color:var(--accent);background:var(--surface-2)}
+.tb-spacer{flex:1}
+.tb{display:flex;align-items:center;gap:6px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface-2);border-radius:9px;padding:7px 11px;cursor:pointer;font-size:.81rem;font-weight:600;white-space:nowrap;transition:.12s}
+.btn:hover{background:var(--surface-3);border-color:#454552}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#6c4cf0}
+.btn.icon{padding:7px 9px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);background:var(--surface-2)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;border-radius:999px;padding:5px 11px;background:var(--surface-2);border:1px solid var(--line-2);color:var(--muted)}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.pill.warn{color:var(--warn);border-color:#4a3a1a;background:#251c0c}
+.pill.warn .dot{background:var(--warn)}
+.pill.err{color:var(--err);border-color:#4a1f22;background:#26100f}
+.pill.err .dot{background:var(--err)}
+
+/* ── layout ───────────────────────────────── */
+.workbench{display:grid;grid-template-columns:252px minmax(0,1fr) 316px;height:calc(100vh - 52px)}
+.side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.side.right{border-right:0;border-left:1px solid var(--line)}
+.side-tabs{display:flex;gap:2px;padding:8px 8px 0;border-bottom:1px solid var(--line)}
+.side-tab{flex:1;border:0;background:transparent;color:var(--muted);padding:8px 4px 9px;font-size:.76rem;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;border-radius:0}
+.side-tab.on{color:var(--text);border-bottom-color:var(--accent)}
+.side-body{flex:1;overflow:auto;padding:12px}
+.side-title{font-size:.67rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin:14px 0 8px}
+.side-title:first-child{margin-top:0}
+.side-hint{font-size:.75rem;color:var(--muted);line-height:1.5;margin:0 0 12px}
+
+/* klocki */
+.block{display:flex;gap:9px;align-items:flex-start;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 10px;margin-bottom:6px;cursor:grab;transition:.12s}
+.block:hover{border-color:var(--accent);background:var(--surface-3)}
+.block:active{cursor:grabbing}
+.block-ico{flex:0 0 26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:.72rem;font-weight:900;background:var(--accent-soft);color:var(--accent-dim)}
+.block-ico.multi{background:#1b3a2e;color:#5fd3a0}
+.block b{display:block;font-size:.79rem;font-weight:650;line-height:1.25}
+.block span{display:block;font-size:.7rem;color:var(--muted);line-height:1.35;margin-top:2px}
+
+/* role */
+.role-row{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:7px 8px;margin-bottom:6px}
+.role-swatch{width:14px;height:14px;border-radius:4px;flex:0 0 14px;cursor:pointer;border:1px solid rgba(255,255,255,.14)}
+.role-row input{flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 5px;font-size:.78rem;outline:none}
+.role-row input:focus{border-color:var(--accent);background:var(--surface-3)}
+.role-row .x{border:0;background:transparent;color:var(--faint);cursor:pointer;padding:2px 4px;font-size:.9rem}
+.role-row .x:hover{color:var(--err)}
+.role-perm{font-size:.68rem;color:var(--muted)}
+
+/* ── canvas ───────────────────────────────── */
+.stage{position:relative;overflow:hidden;background:
+  radial-gradient(circle at 1px 1px,var(--grid) 1px,transparent 0) 0 0/22px 22px, var(--bg);}
+.viewport{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+.stage.panning{cursor:grabbing}
+.stage.connecting{cursor:crosshair}
+
+.node{position:absolute;width:218px;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,.45);cursor:grab;user-select:none;transition:border-color .12s,box-shadow .12s}
+.node:hover{border-color:#4a4a58}
+.node.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 10px 30px rgba(124,92,255,.22)}
+.node.tbd{border-style:dashed;border-color:var(--warn)}
+.node-head{display:flex;align-items:center;gap:7px;padding:8px 10px 0}
+.node-ico{width:16px;height:16px;border-radius:5px;flex:0 0 16px}
+.node-role{font-size:.69rem;font-weight:700;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.node-kind{margin-left:auto;font-size:.6rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+.node-title{padding:5px 10px 0;font-size:.82rem;font-weight:650;line-height:1.3}
+.node-sub{padding:4px 10px 0;margin-bottom:10px;font-size:.7rem;color:var(--muted);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.node-tags{display:flex;gap:4px;flex-wrap:wrap;padding:0 10px 9px}
+.tag{font-size:.63rem;font-weight:700;border-radius:5px;padding:2px 6px;background:var(--surface-3);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag.warn{background:#2c2110;color:var(--warn)}
+.node.start,.node.koniec{width:150px}
+.node.start .node-title,.node.koniec .node-title{padding-bottom:10px}
+.node.decyzja{border-color:#5a4a1e}
+.node.decyzja .node-kind{color:var(--warn)}
+
+.port{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--surface-3);border:2px solid var(--line-2);left:50%;translate:-50% 0;transition:.12s;z-index:2}
+.port.in{top:0}
+.port.out{bottom:0;cursor:crosshair}
+.port.out:hover,.port.hot{background:var(--accent);border-color:var(--accent-dim);scale:1.35}
+.node.sel .port{border-color:var(--accent)}
+
+.wires{position:absolute;top:0;left:0;overflow:visible;pointer-events:none}
+.wire{fill:none;stroke:#4d4d5c;stroke-width:2;pointer-events:stroke;cursor:pointer}
+.wire:hover{stroke:var(--accent-dim)}
+.wire.sel{stroke:var(--accent);stroke-width:2.6}
+.wire-hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+.wire-temp{stroke:var(--accent);stroke-dasharray:5 4;pointer-events:none}
+.wire-label{font-size:10.5px;font-weight:800;fill:var(--accent-dim);pointer-events:none}
+.wire-label-bg{fill:var(--bg);stroke:var(--line);stroke-width:1;rx:5}
+
+/* pływające sterowanie */
+.stage-tools{position:absolute;left:12px;bottom:12px;display:flex;gap:6px;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:5px;z-index:20}
+.zoomv{font-size:.74rem;color:var(--muted);min-width:44px;text-align:center}
+.stage-hint{pointer-events:none;position:absolute;right:12px;bottom:12px;font-size:.71rem;color:var(--faint);background:var(--surface);
+  border:1px solid var(--line);border-radius:9px;padding:7px 11px;line-height:1.5;z-index:20;max-width:300px}
+.stage-hint kbd{background:var(--surface-3);border:1px solid var(--line-2);border-radius:4px;padding:1px 5px;font-size:.66rem;font-family:inherit}
+.empty-hint{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;text-align:center}
+.empty-hint div{color:var(--faint);font-size:.85rem;line-height:1.7;max-width:330px}
+
+/* ── inspektor ────────────────────────────── */
+.insp-empty{color:var(--faint);font-size:.8rem;line-height:1.6;padding:26px 6px;text-align:center}
+.f{margin-bottom:11px}
+.f label{display:block;font-size:.66rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.f input,.f select,.f textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+  padding:7px 9px;font-size:.8rem;outline:none;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--accent);background:var(--surface-3)}
+.f textarea{min-height:56px;line-height:1.5}
+.f .sub{font-size:.69rem;color:var(--faint);margin-top:4px;line-height:1.4}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chk{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:9px 10px;cursor:pointer;margin-bottom:11px}
+.chk.on{border-color:var(--warn);background:#221a0b}
+.chk .box{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line-2);display:grid;place-items:center;font-size:.6rem}
+.chk.on .box{background:var(--warn);border-color:var(--warn);color:#1a1205}
+.chk b{font-size:.78rem;font-weight:650}
+.chk span{display:block;font-size:.68rem;color:var(--muted);margin-top:1px;line-height:1.35}
+.insp-head{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--line)}
+.insp-head b{font-size:.82rem}
+.insp-head .btn{margin-left:auto}
+
+/* ── raport ───────────────────────────────── */
+.issues{border-top:1px solid var(--line);max-height:200px;overflow:auto;padding:10px 12px;background:var(--surface)}
+.issue{display:flex;gap:7px;font-size:.74rem;line-height:1.45;border-radius:7px;padding:6px 8px;margin-bottom:5px;cursor:pointer}
+.issue b{flex:0 0 auto;font-size:.66rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;padding-top:1px}
+.issue.err{background:#22100f;color:#ffb3b6}.issue.err b{color:var(--err)}
+.issue.warn{background:#231a09;color:#ffdda3}.issue.warn b{color:var(--warn)}
+.issue.ok{background:#0e2419;color:#a5e9c9}.issue.ok b{color:var(--ok)}
+.issue:hover{outline:1px solid var(--line-2)}
+
+/* ── modal ────────────────────────────────── */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;place-items:center;z-index:100;padding:20px}
+.modal.on{display:grid}
+.modal-card{background:var(--surface);border:1px solid var(--line-2);border-radius:14px;width:min(760px,100%);max-height:86vh;
+  display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.modal-head h3{margin:0;font-size:.95rem}
+.modal-body{padding:16px;overflow:auto}
+.modal-foot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+textarea.code{width:100%;min-height:330px;background:#08080b;border:1px solid var(--line);border-radius:10px;padding:12px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.72rem;line-height:1.55;color:#c9d3e8;outline:none;resize:vertical}
+@media(max-width:1180px){.workbench{grid-template-columns:200px minmax(0,1fr) 280px}}
+@media(max-width:900px){.workbench{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><div class="brand-mark">BO</div><b>Flows</b></div>
+  <input class="flow-name" id="flowName" value="Weryfikacja końcowa" spellcheck="false">
+  <div class="pill" id="statusPill"><span class="dot"></span><span id="statusText">gotowe</span></div>
+  <div class="tb-spacer"></div>
+  <div class="tb">
+    <button class="btn ghost" id="btnNew">＋ Nowy przebieg</button>
+    <button class="btn ghost" id="btnPreset">Wzorzec: Szczecin</button>
+    <button class="btn" id="btnLayout">Autoukład</button>
+    <button class="btn" id="btnImport">Wczytaj JSON</button>
+    <button class="btn primary" id="btnExport">Eksport JSON</button>
+  </div>
+</div>
+
+<div class="workbench">
+  <!-- LEWY PANEL -->
+  <aside class="side">
+    <div class="side-tabs">
+      <button class="side-tab on" data-tab="bloki">Klocki</button>
+      <button class="side-tab" data-tab="role">Role</button>
+    </div>
+    <div class="side-body" id="sideBody"></div>
+  </aside>
+
+  <!-- PŁÓTNO -->
+  <div class="stage" id="stage">
+    <div class="viewport" id="viewport">
+      <svg class="wires" id="wires"><defs>
+        <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#4d4d5c"/></marker>
+        <marker id="ar-a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="#7c5cff"/></marker>
+      </defs></svg>
+      <div id="nodes"></div>
+    </div>
+    <div class="empty-hint" id="emptyHint" style="display:none"><div>
+      Puste płótno.<br>Przeciągnij klocek z lewej albo kliknij <b>Wzorzec: Szczecin</b>,<br>żeby zacząć od gotowego przebiegu.
+    </div></div>
+    <div class="stage-tools">
+      <button class="btn icon" id="zOut">−</button>
+      <span class="zoomv" id="zVal">100%</span>
+      <button class="btn icon" id="zIn">+</button>
+      <button class="btn icon" id="zFit" title="Dopasuj">⛶</button>
+    </div>
+    <div class="stage-hint">
+      <kbd>przeciągnij tło</kbd> przesuwasz · <kbd>kółko</kbd> zoom ·
+      <kbd>port ↓</kbd> ciągniesz połączenie · <kbd>Del</kbd> usuwa
+    </div>
+  </div>
+
+  <!-- INSPEKTOR -->
+  <aside class="side right">
+    <div class="insp-head"><b id="inspTitle">Inspektor</b>
+      <button class="btn icon" id="btnDel" title="Usuń (Del)" style="display:none">🗑</button></div>
+    <div class="side-body" id="inspector"></div>
+    <div class="issues" id="issues"></div>
+  </aside>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-head"><h3 id="modalTitle">JSON</h3>
+      <button class="btn ghost" style="margin-left:auto" id="modalX">✕</button></div>
+    <div class="modal-body"><textarea class="code" id="modalText" spellcheck="false"></textarea>
+      <p class="side-hint" id="modalHint" style="margin:10px 0 0"></p></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<script id="wzorzec" type="application/json">{"meta": {"tytul": "Weryfikacja projektów SBO 2027", "klient": "Miasto Szczecin", "edycja": "SBO 2027 (instytucja 205, edycja 13)", "zrodlo": "Diagramy procesu weryfikacji SBO 2027 + interaktywna mapa supportu", "uwagi": "Czerwone oznaczenia to kroki zmienione względem poprzedniej edycji; fioletowe nazwy to nowe nazewnictwo uprawnień."}, "etapy": [{"id": "koncowa", "tytul": "Weryfikacja końcowa", "opis": "Ocena w wydziale, konsultacje, akceptacja dyrektora oraz końcowa decyzja administratora.", "termin": "30 dni od przypisania projektu do wydziału", "role": [{"id": "admin", "nazwa": "Administrator", "uprawnienie": "Weryfikator merytoryczny", "poprzednia_nazwa": ""}, {"id": "autor", "nazwa": "Autor projektu", "uprawnienie": "Wnioskodawca", "poprzednia_nazwa": ""}, {"id": "dyrektor", "nazwa": "Dyrektor departamentu", "uprawnienie": "Akceptacja karty oceny", "poprzednia_nazwa": ""}, {"id": "weryfikator", "nazwa": "Koordynator w wydziale/jednostce", "uprawnienie": "Weryfikator", "poprzednia_nazwa": ""}, {"id": "koord-konsult", "nazwa": "Koordynator konsultacji", "uprawnienie": "Konsultujący + koordynator", "poprzednia_nazwa": "Pracownik oceniający & Koordynator konsultacji"}, {"id": "konsultujacy", "nazwa": "Pracownik opiniujący", "uprawnienie": "Konsultujący", "poprzednia_nazwa": ""}], "kroki": [{"id": "k-start", "typ": "start", "rola": "admin", "poziom": 0, "tytul": "Początek etapu", "co_sie_dzieje": "Rozpoczęcie weryfikacji końcowej."}, {"id": "k-przypisz-wydzial", "typ": "krok", "rola": "admin", "poziom": 1, "tytul": "Przypisuje projekt do wydziału", "co_sie_dzieje": "Rozpoczyna 30-dniowy etap i przypisuje projekt do właściwego wydziału.", "warunek_wejscia": "Projekt jest gotowy do weryfikacji końcowej.", "efekt": "Dyrektor widzi projekt swojego wydziału.", "status_w_systemie": "", "termin": "Start liczenia 30 dni na weryfikację projektu. Termin jest stały, niezależnie od tego, kiedy dyrektor przypisze projekt koordynatorowi.", "powiadomienie": "", "uwagi": "Termin jest stały — 30 dni od chwili przypisania projektu.", "doprecyzowac": false}, {"id": "k-widzi", "typ": "krok", "rola": "dyrektor", "poziom": 1, "tytul": "Widzi projekty wydziału", "co_sie_dzieje": "Dyrektor ma wgląd w projekty przypisane do jego departamentu.", "warunek_wejscia": "Administrator przypisał projekt do wydziału.", "efekt": "Może wskazać weryfikatora.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Brak projektu zwykle oznacza niewłaściwy wydział lub brak przypisania.", "doprecyzowac": false}, {"id": "k-przypisz-weryfikatora", "typ": "krok", "rola": "dyrektor", "poziom": 2, "tytul": "Przypisuje weryfikatora", "co_sie_dzieje": "Dyrektor wybiera osobę odpowiedzialną za dalszą weryfikację.", "warunek_wejscia": "Projekt jest widoczny w wydziale.", "efekt": "Projekt trafia do koordynatora/weryfikatora.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Sprawdź listę uprawnionych osób w departamencie.", "zmiana": "Zmieniono odpowiedzialność za przypisanie weryfikatora.", "doprecyzowac": false}, {"id": "k-otrzymuje", "typ": "krok", "rola": "weryfikator", "poziom": 2, "tytul": "Otrzymuje projekt do weryfikacji", "co_sie_dzieje": "Projekt pojawia się na liście weryfikatora.", "warunek_wejscia": "Dyrektor przypisał weryfikatora.", "efekt": "Można rozpocząć sprawdzanie treści.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Zweryfikuj aktywne przypisanie i status projektu.", "doprecyzowac": false}, {"id": "k-weryfikuje", "typ": "krok", "rola": "weryfikator", "poziom": 3, "tytul": "Weryfikuje treść", "co_sie_dzieje": "Analizuje projekt przed skierowaniem do opiniowania.", "warunek_wejscia": "Projekt został przypisany.", "efekt": "Może wskazać konsultującego.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Do uzupełnienia: checklista zakresu weryfikacji końcowej.", "doprecyzowac": true}, {"id": "k-przypisz-konsult", "typ": "krok", "rola": "weryfikator", "poziom": 4, "tytul": "Przypisuje projekt do konsultującego", "co_sie_dzieje": "Wskazuje koordynatora konsultacji w wybranej jednostce.", "warunek_wejscia": "Projekt wymaga opinii konsultującego.", "efekt": "Projekt trafia do koordynatora konsultacji.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Sprawdź jednostkę i nowe nazewnictwo uprawnień.", "zmiana": "Zmieniono rolę oraz nazwy uprawnień używane przy przekazaniu.", "doprecyzowac": false}, {"id": "k-przekazuje", "typ": "krok", "rola": "koord-konsult", "poziom": 4, "tytul": "Przekazuje projekt do odpowiedniego konsultującego", "co_sie_dzieje": "Koordynator kieruje projekt do właściwego pracownika opiniującego.", "warunek_wejscia": "Projekt został przekazany do konsultacji.", "efekt": "Konsultujący otrzymuje zadanie.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Sprawdź dostęp konsultującego do jednostki.", "zmiana": "Przekazanie wykonuje koordynator konsultacji.", "doprecyzowac": false}, {"id": "k-ocenia", "typ": "krok", "rola": "konsultujacy", "poziom": 4, "tytul": "Ocenia projekt", "co_sie_dzieje": "Przeprowadza ocenę projektu w terminie do 7 dni.", "warunek_wejscia": "Projekt został mu przekazany.", "efekt": "Może wypełnić kartę oceny.", "status_w_systemie": "", "termin": "Maksymalnie 7 dni na ocenę konsultującego.", "powiadomienie": "", "uwagi": "Kontroluj datę przekazania i upływ siedmiodniowego terminu.", "doprecyzowac": false}, {"id": "k-karta", "typ": "krok", "rola": "konsultujacy", "poziom": 5, "tytul": "Wypełnia kartę oceny", "co_sie_dzieje": "Zapisuje wynik opiniowania w karcie.", "warunek_wejscia": "Projekt został oceniony.", "efekt": "Karta przechodzi bez zmian albo z sugestią.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Do uzupełnienia: wymagane pola oraz możliwość zapisu roboczego.", "doprecyzowac": true}, {"id": "k-czy-zmiany", "typ": "decyzja", "rola": "konsultujacy", "poziom": 6, "tytul": "Czy proponuje zmiany?", "co_sie_dzieje": "Decyzja o zgłoszeniu opisowej sugestii zmian.", "efekt": "Sugestia wraca do weryfikatora lub proces przechodzi do agregacji.", "doprecyzowac": false}, {"id": "k-sugestia", "typ": "krok", "rola": "konsultujacy", "poziom": 7, "tytul": "Sugestia zmian w formie opisowej", "co_sie_dzieje": "Opisuje proponowane korekty.", "warunek_wejscia": "Stwierdzono potrzebę zmiany.", "efekt": "Sugestia trafia do weryfikatora.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Sugestia nie oznacza bezpośredniej edycji projektu.", "doprecyzowac": false}, {"id": "k-analizuje", "typ": "krok", "rola": "weryfikator", "poziom": 7, "tytul": "Analizuje sugestie konsultującego", "co_sie_dzieje": "Weryfikuje zasadność sugestii i wybiera rekomendacje.", "warunek_wejscia": "Konsultujący przesłał opis zmian.", "efekt": "Może przygotować zmiany dla autora.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Wyświetl historię rozpatrzenia każdej sugestii.", "doprecyzowac": false}, {"id": "k-wprowadza", "typ": "krok", "rola": "weryfikator", "poziom": 8, "tytul": "Wprowadza zmiany w projekcie i wysyła do autora", "co_sie_dzieje": "Przygotowuje zmiany oraz przekazuje je autorowi do decyzji.", "warunek_wejscia": "Sugestie zostały zaakceptowane przez weryfikatora.", "efekt": "Autor może zaakceptować albo odrzucić zmiany.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Porównanie wersji projektu ułatwi wyjaśnienie zgłoszeń supportowych.", "doprecyzowac": false}, {"id": "k-autor", "typ": "krok", "rola": "autor", "poziom": 8, "tytul": "Akceptuje / odrzuca zmiany", "co_sie_dzieje": "Autor podejmuje decyzję w sprawie zaproponowanych korekt.", "warunek_wejscia": "Otrzymał zmienioną wersję projektu.", "efekt": "Proces wraca do agregacji ocen.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Sprawdź termin oraz to, którą wersję projektu widzi autor.", "doprecyzowac": false}, {"id": "k-zbiera", "typ": "krok", "rola": "weryfikator", "poziom": 9, "tytul": "Zebranie ścieżek oceny", "co_sie_dzieje": "Łączy ścieżkę bez zmian i ścieżkę po decyzji autora.", "warunek_wejscia": "Opiniowanie i uzgodnienia zostały zakończone.", "efekt": "Można agregować oceny.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Punkt techniczny łączący warianty procesu.", "doprecyzowac": false}, {"id": "k-agreguje", "typ": "krok", "rola": "weryfikator", "poziom": 10, "tytul": "Agreguje oceny", "co_sie_dzieje": "Łączy wyniki wszystkich ocen projektu.", "warunek_wejscia": "Wszystkie wymagane karty są zakończone.", "efekt": "Powstaje kompletna karta z rekomendacją.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Jeśli agregacja jest zablokowana, sprawdź brakujące lub robocze oceny.", "doprecyzowac": false}, {"id": "k-do-dyrektora", "typ": "krok", "rola": "weryfikator", "poziom": 11, "tytul": "Przekazuje kartę oceny i rekomendację dyrektorowi", "co_sie_dzieje": "Kieruje komplet dokumentów do zatwierdzenia.", "warunek_wejscia": "Oceny zostały zagregowane.", "efekt": "Dyrektor otrzymuje kartę do decyzji.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Zweryfikuj status karty i przypisanego dyrektora.", "doprecyzowac": false}, {"id": "k-akceptacja", "typ": "decyzja", "rola": "dyrektor", "poziom": 12, "tytul": "Akceptacja karty?", "co_sie_dzieje": "Dyrektor akceptuje kartę albo odsyła ją do poprawy.", "efekt": "Akceptacja kieruje projekt do decyzji końcowej, odrzucenie — do aktualizacji.", "doprecyzowac": false}, {"id": "k-akceptuje-karte", "typ": "krok", "rola": "dyrektor", "poziom": 13, "tytul": "Akceptuje kartę oceny i rekomendację", "co_sie_dzieje": "Zatwierdza dokumentację przygotowaną przez wydział.", "warunek_wejscia": "Dyrektor pozytywnie ocenił kartę.", "efekt": "Projekt trafia do administratora.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Sprawdź datę, osobę akceptującą i wersję karty.", "doprecyzowac": false}, {"id": "k-odrzuca-karte", "typ": "krok", "rola": "dyrektor", "poziom": 13, "tytul": "Odrzuca kartę oceny i rekomendację", "co_sie_dzieje": "Zwraca kartę do poprawy.", "warunek_wejscia": "Karta wymaga uzupełnienia lub korekty.", "efekt": "Weryfikator otrzymuje ją do aktualizacji.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Kluczowe jest uzasadnienie i stan karty po cofnięciu.", "doprecyzowac": false}, {"id": "k-aktualizuje", "typ": "krok", "rola": "weryfikator", "poziom": 13, "tytul": "Aktualizuje kartę oceny i rekomendację", "co_sie_dzieje": "Wprowadza poprawki wskazane przez dyrektora.", "warunek_wejscia": "Dyrektor odrzucił kartę.", "efekt": "Karta ponownie trafia do dyrektora.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Sprawdź, czy zmiany zostały zapisane w nowej wersji.", "doprecyzowac": false}, {"id": "k-decyzja", "typ": "krok", "rola": "admin", "poziom": 14, "tytul": "Odrzuca / akceptuje projekt", "co_sie_dzieje": "Podejmuje końcową decyzję po zatwierdzeniu karty.", "warunek_wejscia": "Dyrektor zaakceptował kartę i rekomendację.", "efekt": "Autor otrzymuje informację o statusie.", "status_w_systemie": "", "termin": "", "powiadomienie": "Autor otrzymuje informację o wyniku etapu.", "uwagi": "Sprawdź docelowy status i treść powiadomienia.", "doprecyzowac": false}, {"id": "k-status", "typ": "krok", "rola": "autor", "poziom": 14, "tytul": "Otrzymuje informację o statusie projektu", "co_sie_dzieje": "Autor widzi wynik weryfikacji końcowej.", "warunek_wejscia": "Administrator podjął decyzję.", "efekt": "Proces weryfikacji zostaje zakończony.", "status_w_systemie": "", "termin": "", "powiadomienie": "", "uwagi": "Do uzupełnienia: wzór powiadomienia i widok na koncie autora.", "doprecyzowac": true}, {"id": "k-koniec", "typ": "koniec", "rola": "autor", "poziom": 15, "tytul": "Koniec etapu", "co_sie_dzieje": "Etap weryfikacji końcowej został zakończony."}], "przejscia": [{"z": "k-start", "do": "k-przypisz-wydzial", "etykieta": ""}, {"z": "k-przypisz-wydzial", "do": "k-widzi", "etykieta": ""}, {"z": "k-widzi", "do": "k-przypisz-weryfikatora", "etykieta": ""}, {"z": "k-przypisz-weryfikatora", "do": "k-otrzymuje", "etykieta": ""}, {"z": "k-otrzymuje", "do": "k-weryfikuje", "etykieta": ""}, {"z": "k-weryfikuje", "do": "k-przypisz-konsult", "etykieta": ""}, {"z": "k-przypisz-konsult", "do": "k-przekazuje", "etykieta": ""}, {"z": "k-przekazuje", "do": "k-ocenia", "etykieta": ""}, {"z": "k-ocenia", "do": "k-karta", "etykieta": ""}, {"z": "k-karta", "do": "k-czy-zmiany", "etykieta": ""}, {"z": "k-czy-zmiany", "do": "k-sugestia", "etykieta": "Są zmiany"}, {"z": "k-czy-zmiany", "do": "k-zbiera", "etykieta": "Brak zmian"}, {"z": "k-sugestia", "do": "k-analizuje", "etykieta": ""}, {"z": "k-analizuje", "do": "k-wprowadza", "etykieta": ""}, {"z": "k-wprowadza", "do": "k-autor", "etykieta": ""}, {"z": "k-autor", "do": "k-zbiera", "etykieta": ""}, {"z": "k-zbiera", "do": "k-agreguje", "etykieta": ""}, {"z": "k-agreguje", "do": "k-do-dyrektora", "etykieta": ""}, {"z": "k-do-dyrektora", "do": "k-akceptacja", "etykieta": ""}, {"z": "k-akceptacja", "do": "k-akceptuje-karte", "etykieta": "TAK"}, {"z": "k-akceptacja", "do": "k-odrzuca-karte", "etykieta": "NIE"}, {"z": "k-odrzuca-karte", "do": "k-aktualizuje", "etykieta": ""}, {"z": "k-aktualizuje", "do": "k-do-dyrektora", "etykieta": "Ponownie"}, {"z": "k-akceptuje-karte", "do": "k-decyzja", "etykieta": ""}, {"z": "k-decyzja", "do": "k-status", "etykieta": ""}, {"z": "k-status", "do": "k-koniec", "etykieta": ""}]}]}</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   MODEL
+   ═══════════════════════════════════════════════════════════════ */
+const KOLORY=['#7c5cff','#35c98a','#e5a53b','#f2545b','#3aa8e5','#d96ae0','#7fd13b','#e8804f'];
+const UPRAWNIENIA=['','Weryfikator merytoryczny','Weryfikator','Weryfikator formalny','Weryfikator & Koordynator +',
+  'Konsultujący','Konsultujący + koordynator','Akceptacja karty oceny','Wnioskodawca','— inne / do ustalenia —'];
+const KIND={start:'Start',krok:'Krok',decyzja:'Rozwidlenie',koniec:'Koniec'};
+
+let F = null;                 // aktywny przebieg
+let sel = null;               // {typ:'node'|'edge', id}
+let view = {x:120,y:60,z:1};
+let uid = 1;
+const nid = p => `${p}-${(uid++).toString(36)}${Math.random().toString(36).slice(2,5)}`;
+
+function nowyPrzebieg(tytul){
+  return {
+    id:'etap-'+Date.now().toString(36),
+    tytul: tytul||'Nowy przebieg weryfikacji',
+    opis:'', termin:'',
+    role:[
+      {id:'r-admin', nazwa:'Administrator BO',   uprawnienie:'Weryfikator merytoryczny', poprzednia_nazwa:'', kolor:KOLORY[0]},
+      {id:'r-wer',   nazwa:'Weryfikator',        uprawnienie:'Weryfikator',              poprzednia_nazwa:'', kolor:KOLORY[1]},
+      {id:'r-autor', nazwa:'Autor projektu',     uprawnienie:'Wnioskodawca',             poprzednia_nazwa:'', kolor:KOLORY[2]}
+    ],
+    nodes:[
+      {id:'n-start', typ:'start', rola:'r-admin', tytul:'Początek etapu', x:360, y:60, ...pustePola()},
+      {id:'n-koniec',typ:'koniec',rola:'r-autor', tytul:'Koniec etapu',   x:360, y:420, ...pustePola()}
+    ],
+    edges:[]
+  };
+}
+const pustePola=()=>({co_sie_dzieje:'',warunek_wejscia:'',efekt:'',status_w_systemie:'',termin:'',powiadomienie:'',uwagi:'',doprecyzowac:false});
+
+const nodeById = id => F.nodes.find(n=>n.id===id);
+const roleById = id => F.role.find(r=>r.id===id) || {nazwa:'(bez roli)',kolor:'#555',uprawnienie:''};
+
+/* ═══════════════════════════════════════════════════════════════
+   BIBLIOTEKA KLOCKÓW  — pojedyncze węzły i gotowe fragmenty procesu
+   ═══════════════════════════════════════════════════════════════ */
+const POJEDYNCZE=[
+  {k:'krok',   ico:'▭', t:'Krok',        o:'Ktoś coś robi i przekazuje projekt dalej'},
+  {k:'decyzja',ico:'◇', t:'Rozwidlenie', o:'Proces rozchodzi się na dwie ścieżki'},
+  {k:'start',  ico:'▶', t:'Start',       o:'Wejście do etapu'},
+  {k:'koniec', ico:'■', t:'Koniec',      o:'Wyjście z etapu'}
+];
+
+/* każdy blok: lista węzłów (slot roli + tytuł) i połączeń między nimi */
+const BLOKI=[
+  {id:'przypisanie', t:'Przypisanie do wydziału', o:'Administrator kieruje projekt do właściwej komórki',
+   role:{admin:'Administrator BO'},
+   n:[['a','krok','admin','Przypisuje projekt do wydziału','Wskazuje komórkę odpowiedzialną za ocenę merytoryczną.']],
+   e:[]},
+
+  {id:'rozdzial', t:'Rozdział pracy w wydziale', o:'Dyrektor widzi projekty i wskazuje weryfikatora',
+   role:{dyr:'Dyrektor wydziału'},
+   n:[['a','krok','dyr','Widzi projekty swojego wydziału','Ma wgląd w projekty przypisane do komórki.'],
+      ['b','krok','dyr','Przypisuje weryfikatora','Wybiera osobę odpowiedzialną za ocenę.']],
+   e:[['a','b','']]},
+
+  {id:'ocena', t:'Ocena w wydziale', o:'Weryfikator odbiera projekt i sprawdza treść',
+   role:{wer:'Weryfikator'},
+   n:[['a','krok','wer','Otrzymuje projekt do weryfikacji','Projekt pojawia się na liście zadań.'],
+      ['b','krok','wer','Weryfikuje treść projektu','Sprawdza projekt pod kątem merytorycznym.']],
+   e:[['a','b','']]},
+
+  {id:'opiniowanie', t:'Opiniowanie w innej jednostce', o:'Koordynator rozdziela, opiniujący wypełnia kartę',
+   role:{wer:'Weryfikator',koord:'Koordynator konsultacji',opin:'Pracownik opiniujący'},
+   n:[['a','krok','wer','Kieruje projekt do jednostki opiniującej','Wskazuje jednostkę wydającą opinię.'],
+      ['b','krok','koord','Przekazuje projekt opiniującemu','Kieruje sprawę do właściwego pracownika.'],
+      ['c','krok','opin','Wydaje opinię','Ocenia projekt w swoim zakresie merytorycznym.'],
+      ['d','krok','opin','Wypełnia kartę oceny','Zapisuje wynik opiniowania w karcie.']],
+   e:[['a','b',''],['b','c',''],['c','d','']]},
+
+  {id:'zmiany', t:'Uzgodnienie zmian z autorem', o:'Rozwidlenie: bez zmian albo korekta akceptowana przez autora',
+   role:{opin:'Pracownik opiniujący',wer:'Weryfikator',autor:'Autor projektu'},
+   n:[['q','decyzja','opin','Czy potrzebne są zmiany w projekcie?','Rozstrzygnięcie, czy zakres wymaga korekty.'],
+      ['a','krok','opin','Zgłasza opisową sugestię zmian','Opisuje korekty — nie edytuje projektu bezpośrednio.'],
+      ['b','krok','wer','Analizuje sugestie','Ocenia zasadność i decyduje, co przedstawić autorowi.'],
+      ['c','krok','wer','Przygotowuje zmiany i wysyła do autora','Przekazuje autorowi propozycję zmienionego zakresu.'],
+      ['d','krok','autor','Akceptuje lub odrzuca zmiany','Autor rozstrzyga, czy zgadza się na zakres.'],
+      ['j','krok','wer','Zebranie ścieżek oceny','Łączy ścieżkę bez zmian i po decyzji autora.']],
+   e:[['q','a','TAK'],['a','b',''],['b','c',''],['c','d',''],['d','j',''],['q','j','NIE']]},
+
+  {id:'akceptacja', t:'Akceptacja dyrektora (z pętlą)', o:'Zatwierdzenie karty albo zwrot do poprawy',
+   role:{wer:'Weryfikator',dyr:'Dyrektor wydziału'},
+   n:[['p','krok','wer','Przekazuje kartę oceny dyrektorowi','Kieruje komplet dokumentów do zatwierdzenia.'],
+      ['q','decyzja','dyr','Czy dyrektor akceptuje kartę oceny?','Zatwierdza albo odsyła do poprawy.'],
+      ['a','krok','dyr','Akceptuje kartę i rekomendację','Zatwierdza dokumentację wydziału.'],
+      ['b','krok','dyr','Odsyła kartę do poprawy','Zwraca kartę z uzasadnieniem.'],
+      ['c','krok','wer','Aktualizuje kartę oceny','Wprowadza poprawki wskazane przez dyrektora.']],
+   e:[['p','q',''],['q','a','TAK'],['q','b','NIE'],['b','c',''],['c','p','Ponownie']]},
+
+  {id:'decyzja-koncowa', t:'Decyzja końcowa i informacja', o:'Rozstrzygnięcie administratora i status dla autora',
+   role:{admin:'Administrator BO',autor:'Autor projektu'},
+   n:[['a','krok','admin','Dopuszcza albo odrzuca projekt','Rozstrzygnięcie kończące etap weryfikacji.'],
+      ['b','krok','autor','Otrzymuje informację o wyniku','Autor widzi status projektu i uzasadnienie.']],
+   e:[['a','b','']]},
+
+  {id:'termin', t:'Kontrola terminu', o:'Co się dzieje, gdy ktoś nie zdąży w terminie',
+   role:{wer:'Weryfikator'},
+   n:[['q','decyzja','wer','Czy opinia wpłynęła w terminie?','Sprawdzenie, czy jednostka zdążyła.'],
+      ['a','krok','wer','Eskalacja — przypomnienie i termin ostateczny','Wysyła przypomnienie i wyznacza ostateczny termin.']],
+   e:[['q','a','NIE']]}
+];
+
+/* wstaw blok: dopasowuje role po nazwie, tworzy brakujące */
+function wstawBlok(blok, x, y){
+  const mapaRol={};
+  Object.entries(blok.role||{}).forEach(([slot,nazwa])=>{
+    let r=F.role.find(r=>r.nazwa.toLowerCase()===nazwa.toLowerCase());
+    if(!r){ r={id:nid('r'),nazwa,uprawnienie:'',poprzednia_nazwa:'',kolor:KOLORY[F.role.length%KOLORY.length]}; F.role.push(r); }
+    mapaRol[slot]=r.id;
+  });
+  const mapaId={}; let i=0;
+  blok.n.forEach(([key,typ,slot,tytul,opis])=>{
+    const id=nid('n'); mapaId[key]=id;
+    F.nodes.push({id,typ,rola:mapaRol[slot],tytul,...pustePola(),co_sie_dzieje:opis||'',
+      x: x + (i%2)*40, y: y + i*118});
+    i++;
+  });
+  (blok.e||[]).forEach(([a,b,et])=>F.edges.push({id:nid('e'),z:mapaId[a],do:mapaId[b],etykieta:et||''}));
+  return blok.n.map(n=>mapaId[n[0]]);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER PŁÓTNA
+   ═══════════════════════════════════════════════════════════════ */
+const stage=document.getElementById('stage'), viewport=document.getElementById('viewport');
+const elNodes=document.getElementById('nodes'), svg=document.getElementById('wires');
+const NODE_W=218, NODE_W_S=150;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const szer=n=>(n.typ==='start'||n.typ==='koniec')?NODE_W_S:NODE_W;
+const wys =n=>document.getElementById(n.id)?.offsetHeight||76;
+
+function rysuj(){
+  viewport.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.z})`;
+  document.getElementById('zVal').textContent=Math.round(view.z*100)+'%';
+  document.getElementById('emptyHint').style.display=F.nodes.length?'none':'grid';
+
+  elNodes.innerHTML=F.nodes.map(n=>{
+    const r=roleById(n.rola);
+    const skrot=t=>{t=String(t||'');return t.length>44?t.slice(0,42)+'…':t;};
+    const tagi=[n.termin&&`<span class="tag">⏱ ${esc(skrot(n.termin))}</span>`,
+                n.status_w_systemie&&`<span class="tag">◉ ${esc(skrot(n.status_w_systemie))}</span>`,
+                n.powiadomienie&&`<span class="tag">✉ powiadomienie</span>`,
+                n.doprecyzowac&&`<span class="tag warn">do ustalenia</span>`].filter(Boolean).join('');
+    return `<div class="node ${n.typ}${sel&&sel.typ==='node'&&sel.id===n.id?' sel':''}${n.doprecyzowac?' tbd':''}"
+        id="${n.id}" style="left:${n.x}px;top:${n.y}px">
+      ${n.typ!=='start'?'<div class="port in"></div>':''}
+      <div class="node-head"><span class="node-ico" style="background:${r.kolor}"></span>
+        <span class="node-role">${esc(r.nazwa)}</span><span class="node-kind">${KIND[n.typ]}</span></div>
+      <div class="node-title">${esc(n.tytul)}</div>
+      ${n.co_sie_dzieje?`<div class="node-sub">${esc(n.co_sie_dzieje)}</div>`:'<div style="height:8px"></div>'}
+      ${tagi?`<div class="node-tags">${tagi}</div>`:''}
+      ${n.typ!=='koniec'?'<div class="port out"></div>':''}
+    </div>`;
+  }).join('');
+
+  requestAnimationFrame(rysujPolaczenia);
+  raport();
+}
+
+function punkty(n){
+  const w=szer(n), h=wys(n);
+  return {out:{x:n.x+w/2,y:n.y+h}, in:{x:n.x+w/2,y:n.y}, cx:n.x+w/2, h};
+}
+function sciezka(a,b){
+  const p=punkty(a), q=punkty(b);
+  if(q.in.y > p.out.y-10){
+    const d=Math.max(34,(q.in.y-p.out.y)/2);
+    return `M${p.out.x},${p.out.y} C${p.out.x},${p.out.y+d} ${q.in.x},${q.in.y-d} ${q.in.x},${q.in.y}`;
+  }
+  const s=Math.max(p.cx,q.cx)+NODE_W/2+46;          // pętla zwrotna — łukiem z prawej
+  const y1=a.y+p.h/2, y2=b.y+q.h/2;
+  return `M${a.x+szer(a)},${y1} C${s},${y1} ${s},${y2} ${b.x+szer(b)},${y2}`;
+}
+function rysujPolaczenia(){
+  const defs=svg.querySelector('defs').outerHTML;
+  let body='';
+  F.edges.forEach(e=>{
+    const a=nodeById(e.z), b=nodeById(e.do); if(!a||!b) return;
+    const d=sciezka(a,b);
+    const on=sel&&sel.typ==='edge'&&sel.id===e.id;
+    body+=`<path class="wire-hit" d="${d}" data-e="${e.id}"></path>`;
+    body+=`<path class="wire${on?' sel':''}" d="${d}" data-e="${e.id}" marker-end="url(#${on?'ar-a':'ar'})"></path>`;
+    if(e.etykieta){
+      const pa=punkty(a), pb=punkty(b);
+      const mx=(pa.out.x+pb.in.x)/2, my=(pa.out.y+pb.in.y)/2;
+      const w=e.etykieta.length*6.4+12;
+      body+=`<rect class="wire-label-bg" x="${mx-w/2}" y="${my-9}" width="${w}" height="18"></rect>`;
+      body+=`<text class="wire-label" x="${mx}" y="${my+3.5}" text-anchor="middle">${esc(e.etykieta)}</text>`;
+    }
+  });
+  if(tempWire) body+=`<path class="wire wire-temp" d="${tempWire}"></path>`;
+  svg.innerHTML=defs+body;
+  const b=granice();
+  svg.setAttribute('width',b.w); svg.setAttribute('height',b.h);
+}
+function granice(){
+  let w=1200,h=800;
+  F.nodes.forEach(n=>{w=Math.max(w,n.x+szer(n)+260);h=Math.max(h,n.y+wys(n)+220);});
+  return {w,h};
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INTERAKCJA: pan, zoom, przeciąganie, łączenie
+   ═══════════════════════════════════════════════════════════════ */
+let tempWire=null, drag=null, connect=null, pan=null;
+const doSwiata=(cx,cy)=>{const r=stage.getBoundingClientRect();return{x:(cx-r.left-view.x)/view.z,y:(cy-r.top-view.y)/view.z};};
+
+stage.addEventListener('mousedown',ev=>{
+  const port=ev.target.closest('.port.out');
+  const node=ev.target.closest('.node');
+  const wire=ev.target.closest('[data-e]');
+
+  if(port && node){
+    connect={from:node.id}; stage.classList.add('connecting');
+    ev.preventDefault(); ev.stopPropagation(); return;
+  }
+  if(node){
+    const n=nodeById(node.id); if(!n) return;
+    const p=doSwiata(ev.clientX,ev.clientY);
+    drag={id:n.id,dx:p.x-n.x,dy:p.y-n.y,moved:false};
+    zaznacz('node',n.id);
+    ev.preventDefault(); return;
+  }
+  if(wire){ zaznacz('edge',wire.dataset.e); return; }
+  pan={x:ev.clientX-view.x,y:ev.clientY-view.y}; stage.classList.add('panning'); zaznacz(null);
+});
+
+window.addEventListener('mousemove',ev=>{
+  if(drag){
+    const p=doSwiata(ev.clientX,ev.clientY); const n=nodeById(drag.id);
+    n.x=Math.round(p.x-drag.dx); n.y=Math.round(p.y-drag.dy); drag.moved=true;
+    const el=document.getElementById(n.id); el.style.left=n.x+'px'; el.style.top=n.y+'px';
+    rysujPolaczenia(); return;
+  }
+  if(connect){
+    const a=nodeById(connect.from), p=punkty(a), m=doSwiata(ev.clientX,ev.clientY);
+    const d=Math.max(30,Math.abs(m.y-p.out.y)/2);
+    tempWire=`M${p.out.x},${p.out.y} C${p.out.x},${p.out.y+d} ${m.x},${m.y-d} ${m.x},${m.y}`;
+    document.querySelectorAll('.port.in').forEach(x=>x.classList.remove('hot'));
+    const t=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.node');
+    if(t&&t.id!==connect.from) t.querySelector('.port.in')?.classList.add('hot');
+    rysujPolaczenia(); return;
+  }
+  if(pan){ view.x=ev.clientX-pan.x; view.y=ev.clientY-pan.y;
+    viewport.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.z})`; }
+});
+
+window.addEventListener('mouseup',ev=>{
+  if(connect){
+    const t=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.node');
+    if(t && t.id!==connect.from){
+      const cel=nodeById(t.id);
+      if(cel.typ!=='start' && !F.edges.some(e=>e.z===connect.from&&e.do===t.id)){
+        const zrodlo=nodeById(connect.from);
+        const ile=F.edges.filter(e=>e.z===connect.from).length;
+        F.edges.push({id:nid('e'),z:connect.from,do:t.id,
+          etykieta: zrodlo.typ==='decyzja' ? (ile===0?'TAK':ile===1?'NIE':'') : ''});
+      }
+    }
+    connect=null; tempWire=null; stage.classList.remove('connecting');
+    document.querySelectorAll('.port.in').forEach(x=>x.classList.remove('hot'));
+    rysuj(); zapisz();
+  }
+  if(drag){ if(drag.moved) zapisz(); drag=null; }
+  if(pan){ pan=null; stage.classList.remove('panning'); }
+});
+
+stage.addEventListener('wheel',ev=>{
+  ev.preventDefault();
+  const r=stage.getBoundingClientRect(), mx=ev.clientX-r.left, my=ev.clientY-r.top;
+  const z2=Math.min(2,Math.max(.25,view.z*(ev.deltaY<0?1.1:1/1.1)));
+  view.x=mx-(mx-view.x)*(z2/view.z); view.y=my-(my-view.y)*(z2/view.z); view.z=z2;
+  viewport.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.z})`;
+  document.getElementById('zVal').textContent=Math.round(view.z*100)+'%';
+},{passive:false});
+
+window.addEventListener('keydown',ev=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if((ev.key==='Delete'||ev.key==='Backspace')&&sel){ usunZaznaczone(); ev.preventDefault(); }
+  if(ev.key==='Escape') zaznacz(null);
+});
+
+function usunZaznaczone(){
+  if(!sel) return;
+  if(sel.typ==='node'){ F.nodes=F.nodes.filter(n=>n.id!==sel.id); F.edges=F.edges.filter(e=>e.z!==sel.id&&e.do!==sel.id); }
+  else F.edges=F.edges.filter(e=>e.id!==sel.id);
+  zaznacz(null); zapisz();
+}
+function zaznacz(typ,id){ sel=typ?{typ,id}:null; rysuj(); inspektor(); }
+
+/* ═══════════════════════════════════════════════════════════════
+   INSPEKTOR
+   ═══════════════════════════════════════════════════════════════ */
+const insp=document.getElementById('inspector');
+function inspektor(){
+  const del=document.getElementById('btnDel');
+  document.getElementById('inspTitle').textContent = sel? (sel.typ==='node'?'Węzeł':'Połączenie') : 'Inspektor';
+  del.style.display = sel?'inline-flex':'none';
+  insp.innerHTML='';
+
+  if(!sel){
+    insp.innerHTML=`<div class="insp-empty">Kliknij węzeł albo połączenie,<br>żeby zobaczyć i opisać szczegóły.<br><br>
+      Tu opisujesz to, co trafia do mapy procesu:<br>termin, status dla autora, powiadomienie.</div>`;
+    return;
+  }
+  if(sel.typ==='edge'){
+    const e=F.edges.find(x=>x.id===sel.id); if(!e){zaznacz(null);return;}
+    const a=nodeById(e.z), b=nodeById(e.do);
+    insp.appendChild(info(`${a?a.tytul:'?'} → ${b?b.tytul:'?'}`));
+    insp.appendChild(pole('Warunek przejścia','etykieta',e,'np. TAK / NIE / Ponownie',
+      'Przy rozwidleniu opisz, kiedy proces idzie tą ścieżką.'));
+    return;
+  }
+
+  const n=nodeById(sel.id); if(!n){zaznacz(null);return;}
+  insp.appendChild(select('Typ węzła','typ',n,Object.entries(KIND).map(([v,t])=>[v,t])));
+  insp.appendChild(select('Rola (kto wykonuje)','rola',n,F.role.map(r=>[r.id,r.nazwa])));
+  insp.appendChild(pole('Tytuł kroku','tytul',n,'np. Przypisuje weryfikatora','Jedno zdanie po polsku — tak, jak mówicie o tym w urzędzie.'));
+  insp.appendChild(pole('Co się dzieje','co_sie_dzieje',n,'','',true));
+  insp.appendChild(pole('Warunek wejścia','warunek_wejscia',n,'co musi być spełnione, żeby ten krok się zaczął','',true));
+  insp.appendChild(pole('Efekt','efekt',n,'co się zmienia po wykonaniu kroku','',true));
+  const g=document.createElement('div'); g.className='f2';
+  g.appendChild(pole('Termin','termin',n,'np. 7 dni'));
+  g.appendChild(pole('Status dla autora','status_w_systemie',n,'np. W ocenie wydziału'));
+  insp.appendChild(g);
+  insp.appendChild(pole('Powiadomienie','powiadomienie',n,'kto dostaje wiadomość i o czym'));
+  insp.appendChild(pole('Uwagi / wskazówka dla supportu','uwagi',n,'','',true));
+
+  const chk=document.createElement('div');
+  chk.className='chk'+(n.doprecyzowac?' on':'');
+  chk.innerHTML=`<div class="box">${n.doprecyzowac?'✓':''}</div><div><b>Do ustalenia z urzędem</b>
+    <span>Węzeł trafi na listę pytań zwrotnych i zostanie oznaczony na mapie.</span></div>`;
+  chk.onclick=()=>{n.doprecyzowac=!n.doprecyzowac;zapisz();inspektor();};
+  insp.appendChild(chk);
+}
+function info(txt){const d=document.createElement('div');d.className='f';d.innerHTML=`<div class="sub" style="margin:0">${esc(txt)}</div>`;return d;}
+function pole(label,key,obj,ph,sub,multi){
+  const d=document.createElement('div'); d.className='f';
+  d.innerHTML=`<label>${esc(label)}</label>`;
+  const el=document.createElement(multi?'textarea':'input');
+  el.value=obj[key]||''; if(ph)el.placeholder=ph;
+  el.oninput=()=>{obj[key]=el.value; rysuj(); zapisz();};
+  d.appendChild(el);
+  if(sub){const s=document.createElement('div');s.className='sub';s.textContent=sub;d.appendChild(s);}
+  return d;
+}
+function select(label,key,obj,opcje){
+  const d=document.createElement('div'); d.className='f';
+  d.innerHTML=`<label>${esc(label)}</label>`;
+  const s=document.createElement('select');
+  opcje.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(obj[key]===v)o.selected=true;s.appendChild(o);});
+  s.onchange=()=>{obj[key]=s.value; rysuj(); zapisz();};
+  d.appendChild(s); return d;
+}
+document.getElementById('btnDel').onclick=usunZaznaczone;
+
+/* ═══════════════════════════════════════════════════════════════
+   LEWY PANEL
+   ═══════════════════════════════════════════════════════════════ */
+let tab='bloki';
+document.querySelectorAll('.side-tab').forEach(b=>b.onclick=()=>{
+  tab=b.dataset.tab;
+  document.querySelectorAll('.side-tab').forEach(x=>x.classList.toggle('on',x===b));
+  panelBoczny();
+});
+function panelBoczny(){
+  const el=document.getElementById('sideBody'); el.innerHTML='';
+  if(tab==='bloki'){
+    el.innerHTML=`<p class="side-hint">Przeciągnij klocek na płótno albo kliknij, żeby wstawić na środku.
+      Gotowe fragmenty wstawiają kilka połączonych węzłów naraz.</p><div class="side-title">Fragmenty procesu</div>`;
+    BLOKI.forEach(b=>{
+      const btn=el.appendChild(klocek('multi', String(b.n.length), b.t, b.o));
+      btn.onclick=()=>{if(btn._przeciagniety)return; const p=srodek(); const ids=wstawBlok(b,p.x,p.y); zapisz(); rysuj(); zaznacz('node',ids[0]);};
+      przeciagalny(btn,(x,y)=>{const ids=wstawBlok(b,x,y);zapisz();rysuj();zaznacz('node',ids[0]);});
+    });
+    el.insertAdjacentHTML('beforeend','<div class="side-title">Pojedyncze węzły</div>');
+    POJEDYNCZE.forEach(p=>{
+      const btn=el.appendChild(klocek('', p.ico, p.t, p.o));
+      const wstaw=(x,y)=>{
+        const id=nid('n');
+        F.nodes.push({id,typ:p.k,rola:F.role[0]?.id,tytul:p.k==='decyzja'?'Nowe pytanie?':'Nowy krok',...pustePola(),x,y});
+        zapisz(); rysuj(); zaznacz('node',id);
+      };
+      btn.onclick=()=>{if(btn._przeciagniety)return; const s=srodek();wstaw(s.x,s.y);};
+      przeciagalny(btn,wstaw);
+    });
+  } else {
+    el.innerHTML=`<p class="side-hint">Role to uczestnicy procesu. Nazwij je tak, jak mówicie o nich w urzędzie,
+      i przypisz uprawnienie z systemu — bez niego nie da się tego skonfigurować w panelu.</p>`;
+    F.role.forEach(r=>{
+      const row=document.createElement('div'); row.className='role-row';
+      const sw=document.createElement('div'); sw.className='role-swatch'; sw.style.background=r.kolor;
+      sw.onclick=()=>{r.kolor=KOLORY[(KOLORY.indexOf(r.kolor)+1)%KOLORY.length];sw.style.background=r.kolor;rysuj();zapisz();};
+      const inp=document.createElement('input'); inp.value=r.nazwa;
+      inp.oninput=()=>{r.nazwa=inp.value;rysuj();zapisz();};
+      const x=document.createElement('button'); x.className='x'; x.textContent='✕';
+      x.onclick=()=>{ if(F.nodes.some(n=>n.rola===r.id)){alert('Ta rola jest użyta w przebiegu — najpierw zmień rolę w tych węzłach.');return;}
+        F.role=F.role.filter(q=>q!==r); panelBoczny(); zapisz(); };
+      row.append(sw,inp,x); el.appendChild(row);
+      const s=document.createElement('select'); s.className='f'; s.style.cssText='width:100%;margin:-2px 0 10px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:.73rem';
+      UPRAWNIENIA.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u||'— uprawnienie w systemie —';if(u===r.uprawnienie)o.selected=true;s.appendChild(o);});
+      s.onchange=()=>{r.uprawnienie=s.value;zapisz();raport();};
+      el.appendChild(s);
+    });
+    const add=document.createElement('button'); add.className='btn'; add.style.width='100%'; add.textContent='＋ Dodaj rolę';
+    add.onclick=()=>{F.role.push({id:nid('r'),nazwa:'Nowa rola',uprawnienie:'',poprzednia_nazwa:'',kolor:KOLORY[F.role.length%KOLORY.length]});panelBoczny();zapisz();};
+    el.appendChild(add);
+  }
+}
+function klocek(cls,ico,t,o){
+  const b=document.createElement('button'); b.className='block';
+  b.innerHTML=`<span class="block-ico ${cls}">${esc(ico)}</span><span><b>${esc(t)}</b><span>${esc(o)}</span></span>`;
+  return b;
+}
+function przeciagalny(el,onDrop){
+  el.addEventListener('mousedown',ev=>{
+    ev.preventDefault();
+    const start={x:ev.clientX,y:ev.clientY}; let ciagnie=false;
+    const mv=e=>{ if(Math.hypot(e.clientX-start.x,e.clientY-start.y)>6){ciagnie=true;el.style.opacity=.5;} };
+    const up=e=>{
+      window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); el.style.opacity=1;
+      if(!ciagnie) return;
+      el._przeciagniety=true; setTimeout(()=>el._przeciagniety=false,0);
+      const r=stage.getBoundingClientRect();
+      if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom) return;
+      const p=doSwiata(e.clientX,e.clientY); const w=wolneMiejsce(Math.round(p.x-109),Math.round(p.y-38)); onDrop(w.x,w.y);
+    };
+    window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up);
+  });
+}
+function srodek(){const r=stage.getBoundingClientRect();const p=doSwiata(r.left+r.width/2,r.top+r.height/3);
+  return wolneMiejsce(Math.round(p.x-109),Math.round(p.y));}
+function wolneMiejsce(x,y){
+  let prob=0;
+  while(prob<40 && F.nodes.some(n=>Math.abs(n.x-x)<30 && Math.abs(n.y-y)<30)){ x+=44; y+=44; prob++; }
+  return {x,y};
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WARSTWY (poziom) + AUTOUKŁAD + WALIDACJA
+   ═══════════════════════════════════════════════════════════════ */
+function poziomy(){
+  const rank={}; F.nodes.forEach(n=>rank[n.id]=0);
+  const wejscia=new Set(F.edges.map(e=>e.do));
+  const starty=F.nodes.filter(n=>n.typ==='start'||!wejscia.has(n.id)).map(n=>n.id);
+  const wstecz=new Set(); const stan={}; // wykrycie krawędzi zwrotnych (DFS)
+  const dfs=id=>{
+    stan[id]=1;
+    F.edges.filter(e=>e.z===id).forEach(e=>{
+      if(stan[e.do]===1) wstecz.add(e.id);
+      else if(!stan[e.do]) dfs(e.do);
+    });
+    stan[id]=2;
+  };
+  starty.forEach(s=>{if(!stan[s])dfs(s);});
+  F.nodes.forEach(n=>{if(!stan[n.id])dfs(n.id);});
+  const kraw=F.edges.filter(e=>!wstecz.has(e.id));
+  for(let i=0;i<F.nodes.length+1;i++){
+    let zmiana=false;
+    kraw.forEach(e=>{ if(rank[e.do]<rank[e.z]+1){rank[e.do]=rank[e.z]+1;zmiana=true;} });
+    if(!zmiana) break;
+  }
+  return rank;
+}
+function autoUklad(){
+  const rank=poziomy();
+  const kol={}; F.role.forEach((r,i)=>kol[r.id]=i);
+  const zajete={};
+  F.nodes.slice().sort((a,b)=>rank[a.id]-rank[b.id]).forEach(n=>{
+    const c=kol[n.rola]??0;
+    let r=rank[n.id];
+    while(zajete[c+':'+r]) r++;           // zajęta kratka → niżej w tej samej kolumnie roli
+    zajete[c+':'+r]=1;
+    n.x=60+c*258; n.y=60+r*140;
+  });
+  dopasuj(); zapisz();
+}
+
+function waliduj(){
+  const out=[]; const idy=new Set(F.nodes.map(n=>n.id));
+  const we=new Set(F.edges.map(e=>e.do)), wy=new Set(F.edges.map(e=>e.z));
+  F.nodes.forEach(n=>{
+    if(n.typ!=='start' && !we.has(n.id)) out.push({t:'err',m:`„${n.tytul}" nie ma wejścia — nikt go nie uruchamia.`,id:n.id});
+    if(n.typ!=='koniec'&& !wy.has(n.id)) out.push({t:'err',m:`„${n.tytul}" to ślepy zaułek — projekt się zatrzymuje.`,id:n.id});
+    if(!n.tytul.trim()) out.push({t:'err',m:'Węzeł bez tytułu.',id:n.id});
+  });
+  F.nodes.filter(n=>n.typ==='decyzja').forEach(n=>{
+    const g=F.edges.filter(e=>e.z===n.id);
+    if(g.length<2) out.push({t:'err',m:`Rozwidlenie „${n.tytul}" ma tylko jedną ścieżkę.`,id:n.id});
+    g.filter(e=>!e.etykieta).forEach(e=>out.push({t:'warn',m:`Rozwidlenie „${n.tytul}" — ścieżka bez opisanego warunku.`,id:n.id}));
+  });
+  F.nodes.filter(n=>n.typ!=='decyzja'&&n.typ!=='koniec').forEach(n=>{
+    if(F.edges.filter(e=>e.z===n.id).length>1)
+      out.push({t:'warn',m:`„${n.tytul}" ma kilka wyjść, a nie jest rozwidleniem — zmień typ na Rozwidlenie.`,id:n.id});
+  });
+  if(!F.nodes.some(n=>n.typ==='start')) out.push({t:'err',m:'Przebieg nie ma węzła Start.'});
+  if(!F.nodes.some(n=>n.typ==='koniec')) out.push({t:'err',m:'Przebieg nie ma węzła Koniec.'});
+  F.role.filter(r=>F.nodes.some(n=>n.rola===r.id)).forEach(r=>{
+    if(!r.uprawnienie) out.push({t:'warn',m:`Rola „${r.nazwa}" nie ma uprawnienia w systemie — nie da się jej skonfigurować w panelu.`});
+  });
+  const autorzy=F.role.filter(r=>/autor|wniosko/i.test(r.nazwa)).map(r=>r.id);
+  if(autorzy.length && !F.nodes.some(n=>autorzy.includes(n.rola)&&/wynik|status|informac/i.test(n.tytul)))
+    out.push({t:'warn',m:'Nie ma kroku, w którym autor dowiaduje się o wyniku etapu.'});
+  const tbd=F.nodes.filter(n=>n.doprecyzowac);
+  if(tbd.length) out.push({t:'warn',m:`Do ustalenia z urzędem: ${tbd.length} — ${tbd.map(n=>n.tytul).join('; ')}.`,id:tbd[0].id});
+  if(!out.length) out.push({t:'ok',m:'Przebieg jest spójny. Można eksportować i przenieść do konfiguracji panelu.'});
+  return out;
+}
+function raport(){
+  const u=waliduj(); const box=document.getElementById('issues'); box.innerHTML='';
+  u.forEach(i=>{
+    const d=document.createElement('div'); d.className='issue '+i.t;
+    d.innerHTML=`<b>${i.t==='err'?'błąd':i.t==='warn'?'uwaga':'ok'}</b><span>${esc(i.m)}</span>`;
+    if(i.id) d.onclick=()=>{zaznacz('node',i.id); const n=nodeById(i.id); if(n){view.x=stage.clientWidth/2-n.x*view.z-109;view.y=stage.clientHeight/3-n.y*view.z;rysuj();}};
+    box.appendChild(d);
+  });
+  const bledy=u.filter(i=>i.t==='err').length, uwagi=u.filter(i=>i.t==='warn').length;
+  const pill=document.getElementById('statusPill'), txt=document.getElementById('statusText');
+  pill.className='pill'+(bledy?' err':uwagi?' warn':'');
+  txt.textContent = bledy? `${bledy} ${bledy===1?'błąd':'błędów'}` : uwagi? `${uwagi} do uzupełnienia` : 'gotowe';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EKSPORT / IMPORT  (format generator.html)
+   ═══════════════════════════════════════════════════════════════ */
+function doEksportu(){
+  const rank=poziomy();
+  const uzyte=new Set(F.nodes.map(n=>n.rola));
+  return {
+    meta:{tytul:F.tytul,klient:'',edycja:'',zrodlo:'BO Flows — edytor przebiegu',
+      uwagi:'Węzły oznaczone „do ustalenia" wymagają potwierdzenia przez urząd.'},
+    etapy:[{
+      id:F.id, tytul:F.tytul, opis:F.opis||'', termin:F.termin||'',
+      role:F.role.filter(r=>uzyte.has(r.id)).map(r=>({id:r.id,nazwa:r.nazwa,uprawnienie:r.uprawnienie||'',poprzednia_nazwa:r.poprzednia_nazwa||''})),
+      kroki:F.nodes.map(n=>({id:n.id,typ:n.typ,rola:n.rola,poziom:rank[n.id]||0,tytul:n.tytul,
+        co_sie_dzieje:n.co_sie_dzieje,warunek_wejscia:n.warunek_wejscia,efekt:n.efekt,
+        status_w_systemie:n.status_w_systemie,termin:n.termin,powiadomienie:n.powiadomienie,
+        uwagi:n.uwagi,doprecyzowac:!!n.doprecyzowac})),
+      przejscia:F.edges.map(e=>({z:e.z,do:e.do,etykieta:e.etykieta||''}))
+    }]
+  };
+}
+function zImportu(json){
+  const etap = json.etapy? json.etapy[0] : json;
+  if(!etap||!etap.kroki) throw new Error('To nie wygląda na przebieg z generatora — brak listy „kroki".');
+  const f={
+    id:etap.id||('etap-'+Date.now().toString(36)), tytul:etap.tytul||'Wczytany przebieg',
+    opis:etap.opis||'', termin:etap.termin||'',
+    role:(etap.role||[]).map((r,i)=>({id:r.id,nazwa:r.nazwa,uprawnienie:r.uprawnienie||'',
+      poprzednia_nazwa:r.poprzednia_nazwa||'',kolor:KOLORY[i%KOLORY.length]})),
+    nodes:etap.kroki.map(k=>({id:k.id,typ:k.typ||'krok',rola:k.rola,tytul:k.tytul||'',
+      co_sie_dzieje:k.co_sie_dzieje||'',warunek_wejscia:k.warunek_wejscia||'',efekt:k.efekt||'',
+      status_w_systemie:k.status_w_systemie||'',termin:k.termin||'',powiadomienie:k.powiadomienie||'',
+      uwagi:k.uwagi||'',doprecyzowac:!!k.doprecyzowac,x:0,y:0})),
+    edges:(etap.przejscia||[]).map(p=>({id:nid('e'),z:p.z,do:p.do,etykieta:p.etykieta||''}))
+  };
+  if(!f.role.length) f.role=[{id:'r1',nazwa:'Rola',uprawnienie:'',poprzednia_nazwa:'',kolor:KOLORY[0]}];
+  return f;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODAL / PRZYCISKI / ZAPIS
+   ═══════════════════════════════════════════════════════════════ */
+const modal=document.getElementById('modal');
+function pokazModal(tytul,tekst,hint,przyciski){
+  document.getElementById('modalTitle').textContent=tytul;
+  document.getElementById('modalText').value=tekst;
+  document.getElementById('modalHint').textContent=hint||'';
+  const f=document.getElementById('modalFoot'); f.innerHTML='';
+  (przyciski||[]).forEach(([t,cls,fn])=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=t;b.onclick=fn;f.appendChild(b);});
+  modal.classList.add('on');
+}
+document.getElementById('modalX').onclick=()=>modal.classList.remove('on');
+modal.onclick=e=>{if(e.target===modal)modal.classList.remove('on');};
+
+document.getElementById('btnExport').onclick=()=>{
+  const json=JSON.stringify(doEksportu(),null,1);
+  pokazModal('Eksport do generatora mapy',json,
+    'Wklej to w ekranie wczytywania generator.html albo pobierz plik. Poziomy na mapie zostały wyliczone z układu połączeń.',
+    [['Kopiuj','',()=>{navigator.clipboard.writeText(json);}],
+     ['Pobierz .json','primary',()=>{
+        const b=new Blob([json],{type:'application/json'}); const a=document.createElement('a');
+        a.href=URL.createObjectURL(b); a.download=`przebieg-${F.tytul.toLowerCase().replace(/[^a-z0-9]+/gi,'-')}.json`;
+        a.click(); URL.revokeObjectURL(a.href);}]]);
+};
+document.getElementById('btnImport').onclick=()=>{
+  pokazModal('Wczytaj przebieg z JSON','',
+    'Wklej JSON w formacie generatora (meta + etapy). Wczytany zostanie pierwszy etap; układ ułożę automatycznie.',
+    [['Wczytaj','primary',()=>{
+      try{
+        F=zImportu(JSON.parse(document.getElementById('modalText').value));
+        modal.classList.remove('on'); document.getElementById('flowName').value=F.tytul;
+        panelBoczny(); autoUklad(); zaznacz(null);
+      }catch(err){ alert('Nie udało się wczytać: '+err.message); }
+    }]]);
+  setTimeout(()=>document.getElementById('modalText').focus(),50);
+};
+document.getElementById('btnNew').onclick=()=>{
+  if(F && F.nodes.length>2 && !confirm('Zacząć nowy przebieg? Bieżący zostanie zastąpiony.')) return;
+  const t=prompt('Nazwa nowego przebiegu:','Weryfikacja końcowa');
+  if(t===null) return;
+  F=nowyPrzebieg(t.trim()||'Nowy przebieg weryfikacji');
+  document.getElementById('flowName').value=F.tytul;
+  view={x:120,y:60,z:1}; panelBoczny(); zaznacz(null); zapisz(); rysuj();
+};
+document.getElementById('btnPreset').onclick=()=>{
+  const w=JSON.parse(document.getElementById('wzorzec').textContent||'null');
+  if(!w){alert('Brak wbudowanego wzorca.');return;}
+  if(F && F.nodes.length>2 && !confirm('Wczytać wzorzec? Bieżący przebieg zostanie zastąpiony.')) return;
+  F=zImportu(w); document.getElementById('flowName').value=F.tytul;
+  panelBoczny(); autoUklad(); zaznacz(null);
+};
+document.getElementById('btnLayout').onclick=autoUklad;
+document.getElementById('flowName').oninput=e=>{F.tytul=e.target.value;zapisz();};
+document.getElementById('zIn').onclick=()=>{view.z=Math.min(2,view.z+.1);rysuj();};
+document.getElementById('zOut').onclick=()=>{view.z=Math.max(.25,view.z-.1);rysuj();};
+function dopasuj(){
+  if(!F.nodes.length){ view={x:120,y:60,z:1}; rysuj(); return; }
+  const x0=Math.min(...F.nodes.map(n=>n.x))-40, y0=Math.min(...F.nodes.map(n=>n.y))-40;
+  const x1=Math.max(...F.nodes.map(n=>n.x+szer(n)))+40, y1=Math.max(...F.nodes.map(n=>n.y+wys(n)))+40;
+  // dopasowujemy do szerokości; w pionie zwykle i tak się przewija, więc nie schodzimy poniżej czytelności
+  const zw=stage.clientWidth/(x1-x0), zh=stage.clientHeight/(y1-y0);
+  view.z=Math.max(.45,Math.min(1.1,Math.min(zw,Math.max(zh,zw))));
+  view.x=-x0*view.z+Math.max(0,(stage.clientWidth-(x1-x0)*view.z)/2);
+  view.y=-y0*view.z+20; rysuj();
+}
+document.getElementById('zFit').onclick=dopasuj;
+
+const KLUCZ='bo-flows-v1';
+let tZapis=null;
+function zapisz(){ clearTimeout(tZapis); tZapis=setTimeout(()=>{
+  try{ localStorage.setItem(KLUCZ,JSON.stringify({F,view})); }catch(e){}
+  raport();
+},250); }
+function wczytajLokalnie(){
+  try{ const d=JSON.parse(localStorage.getItem(KLUCZ)||'null');
+    if(d&&d.F&&d.F.nodes){ F=d.F; if(d.view)view=d.view; return true; }
+  }catch(e){}
+  return false;
+}
+
+/* ── start ───────────────────────────────── */
+if(!wczytajLokalnie()){
+  const w=JSON.parse(document.getElementById('wzorzec').textContent||'null');
+  F = w ? zImportu(w) : nowyPrzebieg('Weryfikacja końcowa');
+}
+document.getElementById('flowName').value=F.tytul;
+panelBoczny(); rysuj(); inspektor();
+if(F.nodes.every(n=>!n.x&&!n.y)) autoUklad();
+</script>
+</body>
+</html>
