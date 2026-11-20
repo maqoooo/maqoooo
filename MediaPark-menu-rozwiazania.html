@@ -157,10 +157,11 @@
 (function () {
   var btn = document.getElementById('dd-btn'), burger = document.getElementById('burger'), mega = document.getElementById('mega'), wrap = document.getElementById('navwrap');
   function set(open) { mega.hidden = !open; btn.setAttribute('aria-expanded', String(open)); burger.setAttribute('aria-expanded', String(open)); burger.setAttribute('aria-label', open ? 'Zamknij menu' : 'Otwórz menu'); }
-  btn.addEventListener('click', function () { set(mega.hidden); });
+  var hoverOpenedAt = 0;
+  btn.addEventListener('click', function () { if (!mega.hidden && Date.now() - hoverOpenedAt < 600) return; set(mega.hidden); });
   burger.addEventListener('click', function () { set(mega.hidden); });
   var t; var hover = window.matchMedia('(hover: hover) and (min-width: 861px)');
-  btn.parentElement.addEventListener('mouseenter', function () { if (hover.matches) { clearTimeout(t); set(true); } });
+  btn.parentElement.addEventListener('mouseenter', function () { if (hover.matches) { clearTimeout(t); if (mega.hidden) hoverOpenedAt = Date.now(); set(true); } });
   wrap.addEventListener('mouseleave', function () { if (hover.matches) { t = setTimeout(function () { set(false); }, 250); } });
   wrap.addEventListener('mouseenter', function () { clearTimeout(t); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !mega.hidden) { set(false); btn.focus(); } });
